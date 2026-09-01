@@ -1,0 +1,451 @@
+targetScope = 'subscription'
+
+type modelDeploymentType = {
+  name: string
+  model: string
+  version: string
+  sku: string
+  capacity: int
+  raiPolicy: string
+}
+
+type subnetPrefixesType = {
+  privateEndpoints: string
+  foundryAgents: string
+  functionsIntegration: string
+  databricksPublic: string
+  databricksPrivate: string
+}
+
+@description('Azure region for all ESG spoke resources.')
+param location string = 'eastus'
+
+@description('New resource group for the parallel secure ESG spoke.')
+param resourceGroupName string
+
+@description('Short lowercase workload prefix used in resource names.')
+@minLength(2)
+@maxLength(12)
+param namePrefix string = 'esg'
+
+@description('Tags applied to every resource.')
+param tags object
+
+@description('Corporate hub VNet resource ID. The platform team creates the reverse peering.')
+@minLength(1)
+param hubVnetResourceId string
+
+@description('Existing platform-managed route table resource ID associated with every spoke subnet.')
+@minLength(1)
+param existingRouteTableResourceId string
+
+@description('Existing central Log Analytics workspace resource ID.')
+@minLength(1)
+param existingLogAnalyticsWorkspaceResourceId string
+
+@description('Microsoft Entra tenant ID used by Function App authentication.')
+@minLength(1)
+param tenantId string
+
+@description('Client ID of the Entra application registration representing the private Function API.')
+@minLength(1)
+param functionAuthenticationClientId string
+
+@description('Spoke VNet address prefixes allocated by corporate IPAM.')
+param vnetAddressPrefixes array
+
+@description('CIDRs for privateEndpoints, foundryAgents, functionsIntegration, databricksPublic, and databricksPrivate.')
+param subnetPrefixes subnetPrefixesType
+
+@description('Deploy Grounding with Bing Search. Its service traffic uses approved public egress.')
+param deployGroundingWithBing bool = true
+
+@description('Governance approval or exception identifier. Required when Grounding with Bing Search is enabled.')
+param groundingComplianceExceptionId string = ''
+
+@description('Foundry model deployments. Validate regional availability and quota before deployment.')
+param foundryModelDeployments modelDeploymentType[] = [
+  {
+    name: 'gpt-4'
+    model: 'gpt-4.1'
+    version: '2025-04-14'
+    sku: 'GlobalStandard'
+    capacity: 100
+    raiPolicy: 'Microsoft.DefaultV2'
+  }
+  {
+    name: 'gpt-5-mini'
+    model: 'gpt-5-mini'
+    version: '2025-08-07'
+    sku: 'GlobalStandard'
+    capacity: 150
+    raiPolicy: 'Microsoft.DefaultV2'
+  }
+  {
+    name: 'o4-mini'
+    model: 'o4-mini'
+    version: '2025-04-16'
+    sku: 'GlobalStandard'
+    capacity: 150
+    raiPolicy: 'Microsoft.DefaultV2'
+  }
+]
+
+@description('Separate Azure OpenAI model deployments retained for functional parity.')
+param openAiModelDeployments modelDeploymentType[] = [
+  {
+    name: 'gpt-4o'
+    model: 'gpt-4o'
+    version: '2024-08-06'
+    sku: 'GlobalStandard'
+    capacity: 51
+    raiPolicy: 'Microsoft.DefaultV2'
+  }
+  {
+    name: 'gpt-4o-batch'
+    model: 'gpt-4o'
+    version: '2024-08-06'
+    sku: 'GlobalBatch'
+    capacity: 65979
+    raiPolicy: 'Microsoft.DefaultV2'
+  }
+]
+
+var token = toLower(uniqueString(subscription().id, resourceGroupName, location))
+var normalizedPrefix = toLower(replace(namePrefix, '-', ''))
+var names = {
+  vnet: 'vnet-${namePrefix}-secure-${token}'
+  applicationInsights: 'appi-${namePrefix}-secure-${token}'
+  workloadStorage: take('st${normalizedPrefix}data${token}', 24)
+  functionStorage: take('st${normalizedPrefix}func${token}', 24)
+  foundryAccount: take('aif-${namePrefix}-${token}', 64)
+  foundryProject: 'esg-project'
+  openAiAccount: take('oai-${namePrefix}-${token}', 64)
+  documentIntelligence: take('di-${namePrefix}-${token}', 64)
+  cosmos: take('cosmos-${namePrefix}-${token}', 44)
+  databricks: take('dbw-${namePrefix}-${token}', 64)
+  databricksAccessConnector: take('dbac-${namePrefix}-${token}', 64)
+  databricksManagedResourceGroup: take('rg-dbw-${namePrefix}-${token}', 90)
+  dataFactory: take('adf-${namePrefix}-${token}', 63)
+  functionPlan: take('asp-${namePrefix}-${token}', 40)
+  functionApp: take('func-${namePrefix}-${token}', 60)
+  grounding: take('grounding-${namePrefix}-${token}', 64)
+}
+
+resource spokeResourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
+  name: resourceGroupName
+  location: location
+  tags: tags
+}
+
+module network './modules/network.bicep' = {
+  name: 'esg-network'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    vnetName: names.vnet
+    vnetAddressPrefixes: vnetAddressPrefixes
+    subnetPrefixes: subnetPrefixes
+    routeTableResourceId: existingRouteTableResourceId
+    hubVnetResourceId: hubVnetResourceId
+  }
+}
+
+module monitoring './modules/monitoring.bicep' = {
+  name: 'esg-monitoring'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    applicationInsightsName: names.applicationInsights
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+module workloadStorage './modules/storage-account.bicep' = {
+  name: 'esg-workload-storage'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    storageAccountName: names.workloadStorage
+    containerNames: [
+      'esg-files'
+      'poc-esg-trigger-data-factory'
+    ]
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+module functionStorage './modules/storage-account.bicep' = {
+  name: 'esg-function-storage'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    storageAccountName: names.functionStorage
+    containerNames: []
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+module foundry './modules/ai-foundry.bicep' = {
+  name: 'esg-foundry'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    accountName: names.foundryAccount
+    projectName: names.foundryProject
+    agentSubnetResourceId: network.outputs.foundryAgentSubnetId
+    modelDeployments: foundryModelDeployments
+    deployGroundingWithBing: deployGroundingWithBing
+    groundingName: names.grounding
+    groundingConnectionName: 'grounding-web-search'
+    groundingComplianceExceptionId: groundingComplianceExceptionId
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+module openAi './modules/cognitive-account.bicep' = {
+  name: 'esg-openai'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    accountName: names.openAiAccount
+    kind: 'OpenAI'
+    modelDeployments: openAiModelDeployments
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+module documentIntelligence './modules/cognitive-account.bicep' = {
+  name: 'esg-document-intelligence'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    accountName: names.documentIntelligence
+    kind: 'FormRecognizer'
+    modelDeployments: []
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+module cosmos './modules/cosmos-db.bicep' = {
+  name: 'esg-cosmos'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    accountName: names.cosmos
+    databaseName: 'esg-db'
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+module databricks './modules/databricks.bicep' = {
+  name: 'esg-databricks'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    workspaceName: names.databricks
+    accessConnectorName: names.databricksAccessConnector
+    vnetResourceId: network.outputs.vnetId
+    publicSubnetName: network.outputs.databricksPublicSubnetName
+    privateSubnetName: network.outputs.databricksPrivateSubnetName
+    managedResourceGroupName: names.databricksManagedResourceGroup
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+module dataFactory './modules/data-factory.bicep' = {
+  name: 'esg-data-factory'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    factoryName: names.dataFactory
+    workloadStorageResourceId: workloadStorage.outputs.resourceId
+    databricksWorkspaceResourceId: databricks.outputs.resourceId
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+module functionApp './modules/function-app.bicep' = {
+  name: 'esg-function-app'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    planName: names.functionPlan
+    functionAppName: names.functionApp
+    hostStorageAccountName: functionStorage.outputs.name
+    integrationSubnetResourceId: network.outputs.functionsIntegrationSubnetId
+    tenantId: tenantId
+    authenticationClientId: functionAuthenticationClientId
+    applicationInsightsConnectionString: monitoring.outputs.connectionString
+    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+  }
+}
+
+var privateEndpointSpecs = concat([
+  {
+    name: 'pe-${names.workloadStorage}-blob'
+    resourceId: workloadStorage.outputs.resourceId
+    groupIds: [
+      'blob'
+    ]
+  }
+  {
+    name: 'pe-${names.functionStorage}-blob'
+    resourceId: functionStorage.outputs.resourceId
+    groupIds: [
+      'blob'
+    ]
+  }
+  {
+    name: 'pe-${names.functionStorage}-queue'
+    resourceId: functionStorage.outputs.resourceId
+    groupIds: [
+      'queue'
+    ]
+  }
+  {
+    name: 'pe-${names.functionStorage}-table'
+    resourceId: functionStorage.outputs.resourceId
+    groupIds: [
+      'table'
+    ]
+  }
+  {
+    name: 'pe-${names.foundryAccount}'
+    resourceId: foundry.outputs.accountResourceId
+    groupIds: [
+      'account'
+    ]
+  }
+  {
+    name: 'pe-${names.openAiAccount}'
+    resourceId: openAi.outputs.resourceId
+    groupIds: [
+      'account'
+    ]
+  }
+  {
+    name: 'pe-${names.documentIntelligence}'
+    resourceId: documentIntelligence.outputs.resourceId
+    groupIds: [
+      'account'
+    ]
+  }
+  {
+    name: 'pe-${names.cosmos}'
+    resourceId: cosmos.outputs.resourceId
+    groupIds: [
+      'Sql'
+    ]
+  }
+  {
+    name: 'pe-${names.functionApp}-site'
+    resourceId: functionApp.outputs.resourceId
+    groupIds: [
+      'sites'
+    ]
+  }
+  {
+    name: 'pe-${names.dataFactory}-factory'
+    resourceId: dataFactory.outputs.resourceId
+    groupIds: [
+      'dataFactory'
+    ]
+  }
+  {
+    name: 'pe-${names.dataFactory}-portal'
+    resourceId: dataFactory.outputs.resourceId
+    groupIds: [
+      'portal'
+    ]
+  }
+  {
+    name: 'pe-${names.databricks}-ui'
+    resourceId: databricks.outputs.resourceId
+    groupIds: [
+      'databricks_ui_api'
+    ]
+  }
+  {
+    name: 'pe-${names.databricks}-auth'
+    resourceId: databricks.outputs.resourceId
+    groupIds: [
+      'browser_authentication'
+    ]
+  }
+], [])
+
+module privateEndpoints './modules/private-endpoints.bicep' = {
+  name: 'esg-private-endpoints'
+  scope: spokeResourceGroup
+  params: {
+    location: location
+    tags: tags
+    subnetResourceId: network.outputs.peSubnetId
+    endpoints: privateEndpointSpecs
+  }
+}
+
+module roleAssignments './modules/role-assignments.bicep' = {
+  name: 'esg-role-assignments'
+  scope: spokeResourceGroup
+  params: {
+    workloadStorageName: workloadStorage.outputs.name
+    functionStorageName: functionStorage.outputs.name
+    cosmosAccountName: cosmos.outputs.name
+    foundryAccountName: foundry.outputs.accountName
+    openAiAccountName: openAi.outputs.name
+    documentIntelligenceAccountName: documentIntelligence.outputs.name
+    databricksWorkspaceName: databricks.outputs.name
+    functionPrincipalId: functionApp.outputs.principalId
+    dataFactoryPrincipalId: dataFactory.outputs.principalId
+    foundryProjectPrincipalId: foundry.outputs.projectPrincipalId
+    databricksAccessConnectorPrincipalId: databricks.outputs.accessConnectorPrincipalId
+  }
+}
+
+output resourceGroupId string = spokeResourceGroup.id
+output vnetId string = network.outputs.vnetId
+output spokeToHubPeeringId string = network.outputs.spokeToHubPeeringId
+output reversePeeringRequired bool = true
+output routeTableResourceId string = existingRouteTableResourceId
+output centralLogAnalyticsWorkspaceResourceId string = existingLogAnalyticsWorkspaceResourceId
+output privateEndpointIds array = privateEndpoints.outputs.resourceIds
+output foundryAccountId string = foundry.outputs.accountResourceId
+output foundryProjectId string = foundry.outputs.projectResourceId
+output foundryProjectEndpoint string = foundry.outputs.projectEndpoint
+output groundingResourceId string = foundry.outputs.groundingResourceId
+output groundingConnectionId string = foundry.outputs.groundingConnectionId
+output openAiAccountId string = openAi.outputs.resourceId
+output documentIntelligenceAccountId string = documentIntelligence.outputs.resourceId
+output workloadStorageAccountId string = workloadStorage.outputs.resourceId
+output functionStorageAccountId string = functionStorage.outputs.resourceId
+output cosmosDbAccountId string = cosmos.outputs.resourceId
+output databricksWorkspaceId string = databricks.outputs.resourceId
+output databricksWorkspaceUrl string = databricks.outputs.workspaceUrl
+output databricksAccessConnectorId string = databricks.outputs.accessConnectorResourceId
+output dataFactoryId string = dataFactory.outputs.resourceId
+output dataFactoryName string = dataFactory.outputs.name
+output functionAppId string = functionApp.outputs.resourceId
+output functionAppHostname string = functionApp.outputs.hostname
+output functionPrincipalId string = functionApp.outputs.principalId
+output dataFactoryPrincipalId string = dataFactory.outputs.principalId
+output foundryProjectPrincipalId string = foundry.outputs.projectPrincipalId
+output dnsOwnership string = 'Central DINE policy and DNS Private Resolver; this deployment creates no private DNS zones or DNS zone groups.'
+output platformActions array = [
+  'Create the reverse hub-to-spoke peering.'
+  'Confirm DINE-created DNS zone groups and central resolver links for every private endpoint.'
+  'Approve Data Factory managed private endpoints to Storage and Databricks.'
+  'Associate Application Insights with the platform Azure Monitor Private Link Scope when public ingestion/query remain disabled.'
+]

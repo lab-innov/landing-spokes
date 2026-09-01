@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-09-01",
+  "sources": [
+    {
+      "name": "bicep-ptn-aiml-landing-zone",
+      "repository": "https://github.com/Azure/bicep-ptn-aiml-landing-zone",
+      "ref": "main",
+      "commit": "bfbcd97f276cba132c30ec4d33f1baa27098af29",
+      "purpose": "Networking, Microsoft Foundry, private endpoint, and RBAC patterns adapted into the locally owned ESG spoke modules."
+    }
+  ]
+}
