@@ -1,0 +1,4 @@
+environments/**/*.bicepparam
+!environments/**/*.example.bicepparam
+__pycache__/
+.DS_Store
