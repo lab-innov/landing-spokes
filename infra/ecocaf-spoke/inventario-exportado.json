@@ -1,0 +1,215 @@
+{
+  "fuente": "main-3.bicep",
+  "sha256": "5c6aad0bdbda84b0caabee8ecfe8f7ff02beb677b340717d5ce537d5ab42c94d",
+  "estado": "Solo exportacion; consulta Azure bloqueada por sesion vencida el 2026-09-07",
+  "recursos_por_tipo": {
+    "Microsoft.Storage/storageAccounts": 1,
+    "Microsoft.Web/serverfarms": 1,
+    "Microsoft.Storage/storageAccounts/blobServices": 1,
+    "Microsoft.Storage/storageAccounts/fileServices": 1,
+    "Microsoft.Storage/storageAccounts/queueServices": 1,
+    "Microsoft.Storage/storageAccounts/tableServices": 1,
+    "Microsoft.Web/sites": 1,
+    "Microsoft.Web/sites/basicPublishingCredentialsPolicies": 2,
+    "Microsoft.Web/sites/config": 1,
+    "Microsoft.Web/sites/deployments": 11,
+    "Microsoft.Web/sites/functions": 23,
+    "Microsoft.Web/sites/hostNameBindings": 1,
+    "Microsoft.Storage/storageAccounts/blobServices/containers": 2,
+    "Microsoft.Storage/storageAccounts/tableServices/tables": 1
+  },
+  "funciones": [
+    {
+      "nombre": "content_file",
+      "ruta": "content/{file_path}/{file_name}",
+      "metodos": [
+        "GET"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "delete_document_by_id",
+      "ruta": "documents/{id}",
+      "metodos": [
+        "DELETE"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "delete_variable",
+      "ruta": "JSON_DELETE",
+      "metodos": [
+        "DELETE"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "download_file",
+      "ruta": "download",
+      "metodos": [
+        "GET"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "estimate_extract_time",
+      "ruta": "estimate_extract_time",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "extract_fields",
+      "ruta": "extract_fields",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "generate_biodiversity",
+      "ruta": "generate-biodiversity",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "get_dictionary",
+      "ruta": "JSON",
+      "metodos": [
+        "GET"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "get_document_url",
+      "ruta": "document-url",
+      "metodos": [
+        "GET"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "get_documents_by_id",
+      "ruta": "documents/{id}",
+      "metodos": [
+        "GET"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "get_item",
+      "ruta": "fases/{id}",
+      "metodos": [
+        "GET"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "get_kpis",
+      "ruta": "kpis",
+      "metodos": [
+        "GET"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "get_paises",
+      "ruta": "list",
+      "metodos": [
+        "GET"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "getbiodiversidad",
+      "ruta": "biodiversidad",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "getinforme",
+      "ruta": "informetext",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "getmodel",
+      "ruta": "Model",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "grouping_projects",
+      "ruta": "grouping-projects",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "insertar_item",
+      "ruta": "insertProyect",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "leer_items",
+      "ruta": "readProyect",
+      "metodos": [
+        "GET"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "process_files",
+      "ruta": "uploadDocuments",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "save_data",
+      "ruta": "save",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "update",
+      "ruta": "items/{item_id}",
+      "metodos": [
+        "PUT"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    },
+    {
+      "nombre": "update_dictionary",
+      "ruta": "JSON_UPLOAD",
+      "metodos": [
+        "POST"
+      ],
+      "autenticacion_trigger": "ANONYMOUS"
+    }
+  ],
+  "dependencias_no_confirmadas": [
+    "Configuracion de aplicacion y conexiones",
+    "Bases de datos y servicios externos",
+    "Autenticacion de aplicacion y consumidores",
+    "RBAC, DNS, diagnosticos y recursos compartidos fuera del alcance exportado"
+  ],
+  "repositorio_codigo_observado": "https://dev.azure.com/CAFrepos/Innovation%20Lab/_git/Caf-ecocaf-api",
+  "rama_observada": "development"
+}
