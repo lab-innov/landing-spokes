@@ -5,6 +5,7 @@ type modelDeploymentType = {
   model: string
   version: string
   sku: string
+  @minValue(1)
   capacity: int
   raiPolicy: string
 }
@@ -17,99 +18,94 @@ type subnetPrefixesType = {
   databricksPrivate: string
 }
 
-@description('Azure region for all ESG spoke resources.')
+@description('Región Azure para los recursos del spoke ESG.')
 param location string = 'eastus'
 
-@description('New resource group for the parallel secure ESG spoke.')
+@description('Nuevo grupo de recursos para la migración paralela de ESG.')
 param resourceGroupName string
 
-@description('Short lowercase workload prefix used in resource names.')
+@description('Prefijo corto en minúsculas para nombres de recursos.')
 @minLength(2)
 @maxLength(12)
 param namePrefix string = 'esg'
 
-@description('Tags applied to every resource.')
+@description('Etiquetas de todos los recursos; iniciativa y clasificación son obligatorias.')
 param tags object
 
-@description('Corporate hub VNet resource ID. The platform team creates the reverse peering.')
+@description('ID de VNet hub corporativa; plataforma crea el peering inverso.')
 @minLength(1)
 param hubVnetResourceId string
 
-@description('Existing platform-managed route table resource ID associated with every spoke subnet.')
+@description('ID de tabla de rutas corporativa asociada a las subredes ESG.')
 @minLength(1)
 param existingRouteTableResourceId string
 
-@description('Existing central Log Analytics workspace resource ID.')
+@description('ID de Log Analytics central existente.')
 @minLength(1)
 param existingLogAnalyticsWorkspaceResourceId string
 
-@description('Microsoft Entra tenant ID used by Function App authentication.')
+@description('Tenant Entra de la autenticación de la Function.')
 @minLength(1)
 param tenantId string
 
-@description('Client ID of the Entra application registration representing the private Function API.')
+@description('Client ID del registro Entra de la API privada.')
 @minLength(1)
 param functionAuthenticationClientId string
 
-@description('Spoke VNet address prefixes allocated by corporate IPAM.')
+@description('Prefijos de VNet asignados por IPAM corporativo.')
 param vnetAddressPrefixes array
 
-@description('CIDRs for privateEndpoints, foundryAgents, functionsIntegration, databricksPublic, and databricksPrivate.')
+@description('CIDR de las cinco subredes ESG; no reutilizar el /24 del patrón Foundry web.')
 param subnetPrefixes subnetPrefixesType
 
-@description('Deploy Grounding with Bing Search. Its service traffic uses approved public egress.')
-param deployGroundingWithBing bool = true
+@description('Crear Grounding con salida pública expresamente aprobada.')
+param deployGroundingWithBing bool = false
 
-@description('Governance approval or exception identifier. Required when Grounding with Bing Search is enabled.')
+@description('Identificador de excepción corporativa requerido al habilitar Grounding.')
 param groundingComplianceExceptionId string = ''
 
-@description('Foundry model deployments. Validate regional availability and quota before deployment.')
-param foundryModelDeployments modelDeploymentType[] = [
-  {
-    name: 'gpt-4'
-    model: 'gpt-4.1'
-    version: '2025-04-14'
-    sku: 'GlobalStandard'
-    capacity: 100
-    raiPolicy: 'Microsoft.DefaultV2'
-  }
-  {
-    name: 'gpt-5-mini'
-    model: 'gpt-5-mini'
-    version: '2025-08-07'
-    sku: 'GlobalStandard'
-    capacity: 150
-    raiPolicy: 'Microsoft.DefaultV2'
-  }
-  {
-    name: 'o4-mini'
-    model: 'o4-mini'
-    version: '2025-04-16'
-    sku: 'GlobalStandard'
-    capacity: 150
-    raiPolicy: 'Microsoft.DefaultV2'
-  }
-]
+@description('Modelos Foundry explícitos; confirmar región, versión y cuota.')
+param foundryModelDeployments modelDeploymentType[] = []
 
-@description('Separate Azure OpenAI model deployments retained for functional parity.')
-param openAiModelDeployments modelDeploymentType[] = [
-  {
-    name: 'gpt-4o'
-    model: 'gpt-4o'
-    version: '2024-08-06'
-    sku: 'GlobalStandard'
-    capacity: 51
-    raiPolicy: 'Microsoft.DefaultV2'
-  }
-  {
-    name: 'gpt-4o-batch'
-    model: 'gpt-4o'
-    version: '2024-08-06'
-    sku: 'GlobalBatch'
-    capacity: 65979
-    raiPolicy: 'Microsoft.DefaultV2'
-  }
-]
+@description('Modelos OpenAI separados conservados para la funcionalidad ESG.')
+param openAiModelDeployments modelDeploymentType[] = []
+
+@description('DNS corporativos que resuelven las zonas privadas CAF.')
+@minLength(1)
+param dnsServers string[]
+param useRemoteGateways bool = false
+@description('Redes autorizadas para llamar a la Function por VPN/APIM.')
+param apiClientPrefixes string[] = []
+param operatorPrefixes string[] = []
+param monitorPrefixes string[] = []
+@description('IP reales de los endpoints Cosmos y Function, descubiertas tras la fundación.')
+param cosmosPrivateIps string[] = []
+param functionPrivateIps string[] = []
+@description('Salidas adicionales TCP autorizadas por CAF: purpose, destination, ports, justification.')
+param extraEgress array = []
+@description('Object IDs de usuarios o identidades autorizados en la Function; no son client IDs ni grupos.')
+@maxLength(13)
+param functionAllowedPrincipalIds string[] = []
+@description('Activar la Function después de la fundación y las pruebas de seguridad.')
+param activateWorkload bool = false
+param networkVerified bool = false
+param defenderVerified bool = false
+param siemVerified bool = false
+param applicationVerified bool = false
+param scanUploads bool = true
+param uploadGateVerified bool = false
+param securityApprovalId string = ''
+@description('Destino SIEM corporativo opcional; ambos campos vacíos usan el pipeline de Log Analytics.')
+param siemAuthorizationRuleId string = ''
+param siemEventHubName string = ''
+param actionGroupResourceId string = ''
+@minValue(1)
+param functionRequestsAlertThreshold int = 10000
+@description('Confirmación explícita de modelos/versiones, cuotas y residencia de datos.')
+param modelsApproved bool = false
+@description('Permisos adicionales del host cuando el código utiliza triggers Blob o Durable Functions.')
+param functionUsesBlobTriggers bool = false
+param functionUsesDurableStorage bool = false
 
 var token = toLower(uniqueString(subscription().id, resourceGroupName, location))
 var normalizedPrefix = toLower(replace(namePrefix, '-', ''))
@@ -138,6 +134,17 @@ resource spokeResourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   tags: tags
 }
 
+module contracts './modules/contracts.bicep' = {
+  name: 'esg-contratos'
+  scope: spokeResourceGroup
+  params: {
+    validSecurity: any(toLower(resourceGroupName) != 'rg-poc-esg-cr' && !empty(tags.?DataClassification ?? '') && !empty(tags.?iniciativa ?? '') && (empty(siemAuthorizationRuleId) == empty(siemEventHubName)))
+    validGrounding: any(!deployGroundingWithBing || (!empty(groundingComplianceExceptionId) && !startsWith(groundingComplianceExceptionId, 'REPLACE')))
+    validModels: any(modelsApproved || (empty(foundryModelDeployments) && empty(openAiModelDeployments)))
+    validActivation: any(!activateWorkload || (!empty(actionGroupResourceId) && networkVerified && defenderVerified && siemVerified && applicationVerified && (!scanUploads || uploadGateVerified) && !empty(securityApprovalId) && !empty(functionAllowedPrincipalIds) && !empty(functionPrivateIps) && !empty(cosmosPrivateIps) && !empty(apiClientPrefixes) && !empty(monitorPrefixes)))
+  }
+}
+
 module network './modules/network.bicep' = {
   name: 'esg-network'
   scope: spokeResourceGroup
@@ -149,7 +156,16 @@ module network './modules/network.bicep' = {
     subnetPrefixes: subnetPrefixes
     routeTableResourceId: existingRouteTableResourceId
     hubVnetResourceId: hubVnetResourceId
+    dnsServers: dnsServers
+    useRemoteGateways: useRemoteGateways
+    apiClientPrefixes: apiClientPrefixes
+    operatorPrefixes: operatorPrefixes
+    monitorPrefixes: monitorPrefixes
+    cosmosPrivateIps: cosmosPrivateIps
+    functionPrivateIps: functionPrivateIps
+    extraEgress: extraEgress
   }
+  dependsOn: [contracts]
 }
 
 module monitoring './modules/monitoring.bicep' = {
@@ -161,6 +177,7 @@ module monitoring './modules/monitoring.bicep' = {
     applicationInsightsName: names.applicationInsights
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
   }
+  dependsOn: [contracts]
 }
 
 module workloadStorage './modules/storage-account.bicep' = {
@@ -175,7 +192,10 @@ module workloadStorage './modules/storage-account.bicep' = {
       'poc-esg-trigger-data-factory'
     ]
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+    siemAuthorizationRuleId: siemAuthorizationRuleId
+    siemEventHubName: siemEventHubName
   }
+  dependsOn: [contracts]
 }
 
 module functionStorage './modules/storage-account.bicep' = {
@@ -187,7 +207,10 @@ module functionStorage './modules/storage-account.bicep' = {
     storageAccountName: names.functionStorage
     containerNames: []
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+    siemAuthorizationRuleId: siemAuthorizationRuleId
+    siemEventHubName: siemEventHubName
   }
+  dependsOn: [contracts]
 }
 
 module foundry './modules/ai-foundry.bicep' = {
@@ -205,7 +228,10 @@ module foundry './modules/ai-foundry.bicep' = {
     groundingConnectionName: 'grounding-web-search'
     groundingComplianceExceptionId: groundingComplianceExceptionId
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+    siemAuthorizationRuleId: siemAuthorizationRuleId
+    siemEventHubName: siemEventHubName
   }
+  dependsOn: [contracts]
 }
 
 module openAi './modules/cognitive-account.bicep' = {
@@ -218,7 +244,10 @@ module openAi './modules/cognitive-account.bicep' = {
     kind: 'OpenAI'
     modelDeployments: openAiModelDeployments
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+    siemAuthorizationRuleId: siemAuthorizationRuleId
+    siemEventHubName: siemEventHubName
   }
+  dependsOn: [contracts]
 }
 
 module documentIntelligence './modules/cognitive-account.bicep' = {
@@ -231,7 +260,10 @@ module documentIntelligence './modules/cognitive-account.bicep' = {
     kind: 'FormRecognizer'
     modelDeployments: []
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+    siemAuthorizationRuleId: siemAuthorizationRuleId
+    siemEventHubName: siemEventHubName
   }
+  dependsOn: [contracts]
 }
 
 module cosmos './modules/cosmos-db.bicep' = {
@@ -243,7 +275,10 @@ module cosmos './modules/cosmos-db.bicep' = {
     accountName: names.cosmos
     databaseName: 'esg-db'
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+    siemAuthorizationRuleId: siemAuthorizationRuleId
+    siemEventHubName: siemEventHubName
   }
+  dependsOn: [contracts]
 }
 
 module databricks './modules/databricks.bicep' = {
@@ -259,7 +294,10 @@ module databricks './modules/databricks.bicep' = {
     privateSubnetName: network.outputs.databricksPrivateSubnetName
     managedResourceGroupName: names.databricksManagedResourceGroup
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+    siemAuthorizationRuleId: siemAuthorizationRuleId
+    siemEventHubName: siemEventHubName
   }
+  dependsOn: [contracts]
 }
 
 module dataFactory './modules/data-factory.bicep' = {
@@ -272,7 +310,10 @@ module dataFactory './modules/data-factory.bicep' = {
     workloadStorageResourceId: workloadStorage.outputs.resourceId
     databricksWorkspaceResourceId: databricks.outputs.resourceId
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+    siemAuthorizationRuleId: siemAuthorizationRuleId
+    siemEventHubName: siemEventHubName
   }
+  dependsOn: [contracts]
 }
 
 module functionApp './modules/function-app.bicep' = {
@@ -287,9 +328,16 @@ module functionApp './modules/function-app.bicep' = {
     integrationSubnetResourceId: network.outputs.functionsIntegrationSubnetId
     tenantId: tenantId
     authenticationClientId: functionAuthenticationClientId
+    actionGroupResourceId: actionGroupResourceId
+    requestsAlertThreshold: functionRequestsAlertThreshold
+    allowedPrincipalIds: functionAllowedPrincipalIds
+    activateWorkload: activateWorkload
     applicationInsightsConnectionString: monitoring.outputs.connectionString
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
+    siemAuthorizationRuleId: siemAuthorizationRuleId
+    siemEventHubName: siemEventHubName
   }
+  dependsOn: [contracts]
 }
 
 var privateEndpointSpecs = concat([
@@ -401,6 +449,8 @@ module roleAssignments './modules/role-assignments.bicep' = {
   name: 'esg-role-assignments'
   scope: spokeResourceGroup
   params: {
+    functionUsesBlobTriggers: functionUsesBlobTriggers
+    functionUsesDurableStorage: functionUsesDurableStorage
     workloadStorageName: workloadStorage.outputs.name
     functionStorageName: functionStorage.outputs.name
     cosmosAccountName: cosmos.outputs.name
@@ -442,10 +492,12 @@ output functionAppHostname string = functionApp.outputs.hostname
 output functionPrincipalId string = functionApp.outputs.principalId
 output dataFactoryPrincipalId string = dataFactory.outputs.principalId
 output foundryProjectPrincipalId string = foundry.outputs.projectPrincipalId
-output dnsOwnership string = 'Central DINE policy and DNS Private Resolver; this deployment creates no private DNS zones or DNS zone groups.'
+output dnsOwnership string = 'DNS central mediante DINE y resolver corporativo; no se crean zonas ni grupos DNS locales.'
 output platformActions array = [
-  'Create the reverse hub-to-spoke peering.'
-  'Confirm DINE-created DNS zone groups and central resolver links for every private endpoint.'
-  'Approve Data Factory managed private endpoints to Storage and Databricks.'
-  'Associate Application Insights with the platform Azure Monitor Private Link Scope when public ingestion/query remain disabled.'
+  'Crear peering inverso hub a spoke.'
+  'Verificar integración DINE y resolución central de cada endpoint privado.'
+  'Aprobar endpoints administrados de ADF hacia Storage y Databricks.'
+  'Asociar Application Insights al AMPLS corporativo y comprobar ingestión y consulta privadas.'
 ]
+
+output securityResourceIds object = { workloadStorage: workloadStorage.outputs.resourceId, functionStorage: functionStorage.outputs.resourceId, cosmos: cosmos.outputs.resourceId, foundry: foundry.outputs.accountResourceId, openAi: openAi.outputs.resourceId, functionApp: functionApp.outputs.resourceId, databricks: databricks.outputs.resourceId }

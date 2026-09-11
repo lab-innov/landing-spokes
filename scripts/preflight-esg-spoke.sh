@@ -22,20 +22,12 @@ az bicep build --file "${REPO_ROOT}/infra/esg-spoke/main.bicep" --stdout >/dev/n
 az bicep build-params --file "${PARAM_FILE}" --stdout >/dev/null
 "${REPO_ROOT}/tests/esg-spoke-contracts.sh"
 
-if ! rg -q "param deployGroundingWithBing = false" "${PARAM_FILE}"; then
-  if ! rg -q "param groundingComplianceExceptionId = '[^']+'" "${PARAM_FILE}" || rg -q "REPLACE-WITH-APPROVED-EXCEPTION-ID" "${PARAM_FILE}"; then
-    echo "Grounding is enabled but the governance exception ID is missing or still a placeholder." >&2
-    exit 1
-  fi
-fi
+PARAM_TEMP="$(mktemp -d)"
+trap 'rm -rf "$PARAM_TEMP"' EXIT
+az bicep build-params --file "$PARAM_FILE" --outfile "$PARAM_TEMP/parameters.json"
+python3 "$SCRIPT_DIR/check-esg-parameters.py" "$PARAM_TEMP/parameters.json"
 
-placeholder_pattern='00000000-0000-0000-0000-000000000000|REPLACE-WITH'
-if rg -q "${placeholder_pattern}" "${PARAM_FILE}"; then
-  echo "The parameter file still contains placeholder platform values." >&2
-  exit 1
-fi
-
-required_providers=(Microsoft.App Microsoft.Bing Microsoft.CognitiveServices Microsoft.Databricks Microsoft.DataFactory Microsoft.DocumentDB Microsoft.Insights Microsoft.Network Microsoft.Storage Microsoft.Web)
+required_providers=(Microsoft.Security Microsoft.App Microsoft.Bing Microsoft.CognitiveServices Microsoft.Databricks Microsoft.DataFactory Microsoft.DocumentDB Microsoft.Insights Microsoft.Network Microsoft.Storage Microsoft.Web)
 for provider_namespace in "${required_providers[@]}"; do
   registration_state="$(az provider show --namespace "${provider_namespace}" --query registrationState -o tsv 2>/dev/null || true)"
   if [[ "${registration_state}" != "Registered" ]]; then

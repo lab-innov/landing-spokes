@@ -1,0 +1,544 @@
+{
+  "foundryAgents": [
+    {
+      "name": "datos-privados",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 200
+      }
+    },
+    {
+      "name": "cosmos-directo",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "cosmos",
+        "destinationPortRanges": [
+          "0-65535"
+        ],
+        "priority": 210
+      }
+    },
+    {
+      "name": "dns-caf",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "dns",
+        "destinationPortRanges": [
+          "53"
+        ],
+        "priority": 220
+      }
+    },
+    {
+      "name": "dns-azure",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "168.63.129.16",
+        "destinationPortRanges": [
+          "53"
+        ],
+        "priority": 230
+      }
+    },
+    {
+      "name": "monitor-privado",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "monitor",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 240
+      }
+    },
+    {
+      "name": "entra",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "AzureActiveDirectory",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 250
+      }
+    },
+    {
+      "name": "monitor-servicio",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "AzureMonitor",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 260
+      }
+    },
+    {
+      "name": "interno-entrada",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "foundryAgents",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 270
+      }
+    },
+    {
+      "name": "interno-salida",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "foundryAgents",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 280
+      }
+    },
+    {
+      "name": "sondas",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "AzureLoadBalancer",
+        "destinationAddressPrefix": "foundryAgents",
+        "destinationPortRanges": [
+          "30000-32767"
+        ],
+        "priority": 290
+      }
+    },
+    {
+      "name": "dependencia-microsoftcontainerregistry",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "MicrosoftContainerRegistry",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 300
+      }
+    },
+    {
+      "name": "dependencia-azurefrontdoor-firstparty",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "AzureFrontDoor.FirstParty",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 310
+      }
+    },
+    {
+      "name": "dependencia-storage",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "Storage",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 320
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    }
+  ],
+  "functionsIntegration": [
+    {
+      "name": "datos-privados",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 200
+      }
+    },
+    {
+      "name": "cosmos-directo",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "cosmos",
+        "destinationPortRanges": [
+          "0-65535"
+        ],
+        "priority": 210
+      }
+    },
+    {
+      "name": "dns-caf",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "dns",
+        "destinationPortRanges": [
+          "53"
+        ],
+        "priority": 220
+      }
+    },
+    {
+      "name": "dns-azure",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "168.63.129.16",
+        "destinationPortRanges": [
+          "53"
+        ],
+        "priority": 230
+      }
+    },
+    {
+      "name": "monitor-privado",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "monitor",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 240
+      }
+    },
+    {
+      "name": "entra",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "AzureActiveDirectory",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 250
+      }
+    },
+    {
+      "name": "monitor-servicio",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "AzureMonitor",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 260
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    }
+  ],
+  "privateEndpoints": [
+    {
+      "name": "https-foundryagents",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 200
+      }
+    },
+    {
+      "name": "https-functionsintegration",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 210
+      }
+    },
+    {
+      "name": "https-databrickspublic",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "databricksPublic",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 220
+      }
+    },
+    {
+      "name": "https-databricksprivate",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "databricksPrivate",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 230
+      }
+    },
+    {
+      "name": "https-operators",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "operators",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 240
+      }
+    },
+    {
+      "name": "cosmos-foundryagents",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundryAgents",
+        "destinationAddressPrefix": "cosmos",
+        "destinationPortRanges": [
+          "0-65535"
+        ],
+        "priority": 250
+      }
+    },
+    {
+      "name": "cosmos-functionsintegration",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "cosmos",
+        "destinationPortRanges": [
+          "0-65535"
+        ],
+        "priority": 260
+      }
+    },
+    {
+      "name": "cosmos-databrickspublic",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "databricksPublic",
+        "destinationAddressPrefix": "cosmos",
+        "destinationPortRanges": [
+          "0-65535"
+        ],
+        "priority": 270
+      }
+    },
+    {
+      "name": "cosmos-databricksprivate",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "databricksPrivate",
+        "destinationAddressPrefix": "cosmos",
+        "destinationPortRanges": [
+          "0-65535"
+        ],
+        "priority": 280
+      }
+    },
+    {
+      "name": "databricks-databrickspublic",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "databricksPublic",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "6666",
+          "3306",
+          "8443-8451"
+        ],
+        "priority": 290
+      }
+    },
+    {
+      "name": "databricks-databricksprivate",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "databricksPrivate",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "6666",
+          "3306",
+          "8443-8451"
+        ],
+        "priority": 300
+      }
+    },
+    {
+      "name": "api-caf",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "clients",
+        "destinationAddressPrefix": "function",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 310
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    }
+  ]
+}

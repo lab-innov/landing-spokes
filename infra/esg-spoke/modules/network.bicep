@@ -8,6 +8,15 @@ param subnetPrefixes object
 param routeTableResourceId string
 param hubVnetResourceId string
 
+param dnsServers array
+param useRemoteGateways bool
+param apiClientPrefixes array
+param operatorPrefixes array
+param monitorPrefixes array
+param cosmosPrivateIps array
+param functionPrivateIps array
+param extraEgress array
+
 var subnetDefinitions = [
   {
     name: 'snet-private-endpoints'
@@ -41,39 +50,28 @@ var subnetDefinitions = [
   }
 ]
 
-resource subnetNsgs 'Microsoft.Network/networkSecurityGroups@2024-05-01' = [for subnet in subnetDefinitions: {
-  name: 'nsg-${subnet.name}'
+// Databricks administra sus reglas obligatorias mediante la delegación. No se sobrescriben.
+resource databricksNsgs 'Microsoft.Network/networkSecurityGroups@2024-05-01' = [for name in ['snet-databricks-public', 'snet-databricks-private']: {
+  name: 'nsg-${name}'
   location: location
   tags: tags
-  properties: {
-    securityRules: subnet.name == 'snet-private-endpoints' ? [
-      {
-        name: 'AllowHttpsFromVirtualNetwork'
-        properties: {
-          priority: 100
-          access: 'Allow'
-          direction: 'Inbound'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '443'
-          sourceAddressPrefix: 'VirtualNetwork'
-          destinationAddressPrefix: '*'
-        }
-      }
-      {
-        name: 'AllowCosmosFromVirtualNetwork'
-        properties: {
-          priority: 110
-          access: 'Allow'
-          direction: 'Inbound'
-          protocol: '*'
-          sourcePortRange: '*'
-          destinationPortRange: '*'
-          sourceAddressPrefix: 'VirtualNetwork'
-          destinationAddressPrefix: '*'
-        }
-      }
-    ] : []
+  properties: {}
+}]
+module workloadNsgs './nsg.bicep' = [for (purpose, i) in ['privateEndpoints', 'foundryAgents', 'functionsIntegration']: {
+  name: 'nsg-${purpose}'
+  params: {
+    name: 'nsg-${subnetDefinitions[i].name}'
+    location: location
+    tags: tags
+    purpose: purpose
+    prefixes: subnetPrefixes
+    dnsServers: dnsServers
+    apiClientPrefixes: apiClientPrefixes
+    operatorPrefixes: operatorPrefixes
+    monitorPrefixes: monitorPrefixes
+    cosmosPrivateIps: cosmosPrivateIps
+    functionPrivateIps: functionPrivateIps
+    extraEgress: extraEgress
   }
 }]
 
@@ -82,6 +80,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   location: location
   tags: tags
   properties: {
+    dhcpOptions: { dnsServers: dnsServers }
     addressSpace: {
       addressPrefixes: vnetAddressPrefixes
     }
@@ -93,7 +92,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
           id: routeTableResourceId
         }
         networkSecurityGroup: {
-          id: subnetNsgs[index].id
+          id: index < 3 ? workloadNsgs[index].outputs.id : databricksNsgs[index - 3].id
         }
         privateEndpointNetworkPolicies: subnet.privateEndpointNetworkPolicies
         delegations: empty(subnet.delegation) ? [] : [
@@ -119,7 +118,7 @@ resource spokeToHubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeer
     remoteVirtualNetwork: {
       id: hubVnetResourceId
     }
-    useRemoteGateways: false
+    useRemoteGateways: useRemoteGateways
   }
 }
 

@@ -1,22 +1,20 @@
-# Databricks Asset Bundle handoff
+# Entrega de Databricks
 
-Notebook source is not present in this repository, so infrastructure deployment
-stops at the secured workspace and access connector. The application repository
-must own a Databricks Asset Bundle that:
+Los notebooks no están en este repositorio. El despliegue de infraestructura crea
+el workspace privado y su access connector; el repositorio de aplicación debe:
 
-1. Targets the `databricksWorkspaceUrl` output from `main.bicep`.
-2. Publishes these workspace paths:
-   - `/Repos/iData/Caf-esg-model/model_processing`
-   - `/Repos/iData/Caf-esg-model/scioteca_webscraping`
-3. Creates or selects an interactive cluster compatible with both notebooks.
-   The cluster must use the VNet-injected workspace, have no public IP, and use
-   an approved runtime/node policy.
-4. Assigns the Data Factory managed identity to the workspace and grants it
-   permission to attach to and restart the interactive cluster. The ARM
-   Contributor assignment created by Bicep does not replace Databricks
-   workspace data-plane entitlements.
-5. Emits the cluster ID as a protected pipeline output. That value becomes the
-   `databricksClusterId` parameter of `adf-assets.bicep`.
+1. Publicar `model_processing` y `scioteca_webscraping` en
+   `/Repos/iData/Caf-esg-model/`, usando el workspace de los outputs.
+2. Crear o seleccionar un clúster compatible, con VNet injection, sin IP pública,
+   runtime/política aprobados y dependencias accesibles por las salidas CAF.
+3. Dar a la identidad ADF los entitlements y permisos de adjuntar/reiniciar el
+   clúster. Contributor de ARM no sustituye permisos del plano de datos.
+4. Configurar acceso a los dos contenedores ESG mediante access connector/Unity
+   Catalog y comprobar aislamiento. La identidad de clúster no recibe ese acceso
+   automáticamente por crear el conector.
+5. Entregar `databricksClusterId` a la etapa `adf-assets.bicep`, probar ambos
+   notebooks y pipelines, y acreditar bloqueo de archivos no analizados.
 
-The bundle must complete before Data Factory assets are deployed. Do not start
-ADF triggers until both notebooks and a manual run of each pipeline succeed.
+No iniciar triggers antes de las pruebas y la constancia de seguridad. Ver
+[activación ESG](../SEGURIDAD.md). DBFS root administrado no está cubierto por
+Defender for Storage; no intentar remediarlo modificando su managed RG.

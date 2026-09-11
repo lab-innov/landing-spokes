@@ -1,19 +1,13 @@
-# Landing Spokes
+# Spokes de CAF
 
-This repository contains workload-specific Azure landing-zone spokes.
+Esta rama contiene el [spoke privado ESG](infra/esg-spoke/README.md), preparado
+para migración paralela sin modificar `RG-POC-ESG-CR`.
 
-## ESG secure spoke
-
-The ESG implementation is under [infra/esg-spoke](infra/esg-spoke/README.md).
-It deploys a parallel private spoke integrated with a corporate hub and keeps
-the existing `RG-POC-ESG-CR` resources unchanged for rollback.
-
-Start by copying and completing the example parameter file:
+Consultar la [revisión CAF y seguridad](infra/esg-spoke/REVISION-CAF.md) para
+controles implementados, responsabilidades corporativas y decisiones pendientes.
 
 ```bash
-cp environments/esg-spoke/esg-spoke.example.bicepparam environments/esg-spoke/dev.bicepparam
-./scripts/deploy-esg-spoke.sh environments/esg-spoke/dev.bicepparam validate
-./scripts/deploy-esg-spoke.sh environments/esg-spoke/dev.bicepparam what-if
+./tests/esg-spoke-contracts.sh
 ```
 
-No deployment is performed until the explicit `create` action is used.
+La validación local no despliega recursos ni acredita cumplimiento en Azure.

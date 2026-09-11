@@ -6,6 +6,8 @@ param accountName string
 param kind string
 param modelDeployments array = []
 param logAnalyticsWorkspaceResourceId string
+param siemAuthorizationRuleId string
+param siemEventHubName string
 
 resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
   name: accountName
@@ -45,7 +47,7 @@ resource deployments 'Microsoft.CognitiveServices/accounts/deployments@2024-10-0
       version: deployment.version
     }
     raiPolicyName: deployment.raiPolicy
-    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
+    versionUpgradeOption: 'NoAutoUpgrade'
   }
 }]
 
@@ -54,6 +56,8 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
   scope: account
   properties: {
     workspaceId: logAnalyticsWorkspaceResourceId
+    eventHubAuthorizationRuleId: empty(siemAuthorizationRuleId) ? null : siemAuthorizationRuleId
+    eventHubName: empty(siemEventHubName) ? null : siemEventHubName
     logs: [
       {
         categoryGroup: 'allLogs'

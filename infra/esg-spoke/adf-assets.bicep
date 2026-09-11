@@ -1,28 +1,28 @@
 targetScope = 'resourceGroup'
 
-@description('Existing ESG Data Factory name output by the infrastructure deployment.')
+@description('Nombre de Data Factory existente, obtenido de la fundación ESG.')
 param dataFactoryName string
 
-@description('Existing secure Databricks workspace resource ID.')
+@description('ID del workspace Databricks privado existente.')
 param databricksWorkspaceResourceId string
 
-@description('Databricks workspace URL including the https:// scheme.')
+@description('URL de Databricks con esquema HTTPS.')
 param databricksWorkspaceUrl string
 
-@description('Interactive cluster ID deployed by the Databricks Asset Bundle stage.')
+@description('ID de clúster interactivo entregado por Databricks Asset Bundle.')
 @minLength(1)
 param databricksClusterId string
 
-@description('Workload storage account resource ID used by the BlobEvents trigger.')
+@description('ID de Storage de negocio para el trigger de blobs.')
 param workloadStorageResourceId string
 
-@description('Blob container monitored by the ESG execution trigger.')
+@description('Contenedor vigilado por el trigger ESG.')
 param triggerContainerName string = 'poc-esg-trigger-data-factory'
 
-@description('Model-processing notebook path deployed by the Databricks Asset Bundle.')
+@description('Ruta del notebook de procesamiento desplegado por el Asset Bundle.')
 param modelProcessingNotebookPath string = '/Repos/iData/Caf-esg-model/model_processing'
 
-@description('Monthly-report notebook path deployed by the Databricks Asset Bundle.')
+@description('Ruta del notebook mensual desplegado por el Asset Bundle.')
 param monthlyReportNotebookPath string = '/Repos/iData/Caf-esg-model/scioteca_webscraping'
 
 resource factory 'Microsoft.DataFactory/factories@2018-06-01' existing = {
@@ -113,7 +113,7 @@ resource blobEventsTrigger 'Microsoft.DataFactory/factories/triggers@2018-06-01'
   parent: factory
   properties: {
     annotations: [
-      'Definition only. Start explicitly after migration validation.'
+      'Solo definición. Iniciar explícitamente tras validar migración y seguridad.'
     ]
     type: 'BlobEventsTrigger'
     typeProperties: {
@@ -144,7 +144,7 @@ resource monthlyTrigger 'Microsoft.DataFactory/factories/triggers@2018-06-01' = 
   parent: factory
   properties: {
     annotations: [
-      'Definition only. Start explicitly after migration validation.'
+      'Solo definición. Iniciar explícitamente tras validar migración y seguridad.'
     ]
     type: 'ScheduleTrigger'
     typeProperties: {

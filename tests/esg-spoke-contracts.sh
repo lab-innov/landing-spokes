@@ -1,36 +1,21 @@
 #!/usr/bin/env bash
+# Compilación, linter, parámetros y contratos locales; no consulta Azure.
 set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-TARGET_DIR="${REPO_ROOT}/infra/esg-spoke"
-
-az bicep build --file "${TARGET_DIR}/main.bicep" --stdout >/dev/null
-az bicep build --file "${TARGET_DIR}/adf-assets.bicep" --stdout >/dev/null
-
-if rg -n "Bing\.Search\.v7|kind:[[:space:]]*'Bing\.Search'|BingSearch-POC" "${TARGET_DIR}"; then
-  echo "Retired Bing Search API resource found." >&2
-  exit 1
+ESG_TEMP="$(mktemp -d)"
+trap 'rm -rf "$ESG_TEMP"' EXIT
+bicep_cmd=(az bicep)
+for entry in main adf-assets; do
+  "${bicep_cmd[@]}" build --file "$REPO_ROOT/infra/esg-spoke/$entry.bicep" --outfile "$ESG_TEMP/$entry.json"
+  "${bicep_cmd[@]}" lint --file "$REPO_ROOT/infra/esg-spoke/$entry.bicep"
+done
+for file in "$REPO_ROOT"/environments/esg-spoke/*.example.bicepparam; do
+  "${bicep_cmd[@]}" build-params --file "$file" --outfile "$ESG_TEMP/$(basename "$file").json"
+done
+ESG_ARM="$ESG_TEMP/main.json" PYTHONDONTWRITEBYTECODE=1 python3 "$SCRIPT_DIR/esg_security.py" -v
+if python3 "$REPO_ROOT/scripts/check-esg-parameters.py" "$ESG_TEMP/esg-spoke.example.bicepparam.json" >/dev/null; then
+  echo 'Error: el ejemplo con marcadores no debe ser desplegable.' >&2; exit 1
 fi
-
-if rg -n "publicNetworkAccess:[[:space:]]*'Enabled'|disableLocalAuth:[[:space:]]*false" "${TARGET_DIR}"; then
-  echo "Insecure public access or local authentication setting found." >&2
-  exit 1
-fi
-
-if rg -n "privateDnsZoneGroups|privateDnsZoneGroup" "${TARGET_DIR}"; then
-  echo "Private DNS zone groups must be managed by central DINE policy." >&2
-  exit 1
-fi
-
-if rg -n "/subscriptions/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" "${TARGET_DIR}"; then
-  echo "Hard-coded subscription ID found in ESG Bicep." >&2
-  exit 1
-fi
-
-rg -q "routeTableResourceId" "${TARGET_DIR}/modules/network.bicep"
-rg -q "privateEndpointNetworkPolicies: 'Enabled'" "${TARGET_DIR}/modules/network.bicep"
-rg -q "GroundingComplianceException" "${TARGET_DIR}/modules/ai-foundry.bicep"
-rg -q "Definition only. Start explicitly after migration validation." "${TARGET_DIR}/adf-assets.bicep"
-
-echo "ESG spoke Bicep and security contracts passed."
+for file in "$REPO_ROOT"/scripts/*.sh; do bash -n "$file"; done
+echo 'Compilación, linter y contratos ESG correctos. Pendiente validación Azure.'

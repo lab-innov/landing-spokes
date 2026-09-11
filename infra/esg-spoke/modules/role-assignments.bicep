@@ -1,5 +1,7 @@
 targetScope = 'resourceGroup'
 
+param functionUsesBlobTriggers bool
+param functionUsesDurableStorage bool
 param workloadStorageName string
 param functionStorageName string
 param cosmosAccountName string
@@ -59,7 +61,7 @@ resource functionStorageBlobOwner 'Microsoft.Authorization/roleAssignments@2022-
   }
 }
 
-resource functionStorageQueueContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource functionStorageQueueContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (functionUsesBlobTriggers || functionUsesDurableStorage) {
   name: guid(functionStorage.id, functionPrincipalId, storageQueueDataContributorRoleId)
   scope: functionStorage
   properties: {
@@ -69,7 +71,7 @@ resource functionStorageQueueContributor 'Microsoft.Authorization/roleAssignment
   }
 }
 
-resource functionStorageTableContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource functionStorageTableContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (functionUsesDurableStorage) {
   name: guid(functionStorage.id, functionPrincipalId, storageTableDataContributorRoleId)
   scope: functionStorage
   properties: {
@@ -79,7 +81,7 @@ resource functionStorageTableContributor 'Microsoft.Authorization/roleAssignment
   }
 }
 
-resource functionStorageAccountContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource functionStorageAccountContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (functionUsesBlobTriggers) {
   name: guid(functionStorage.id, functionPrincipalId, storageAccountContributorRoleId)
   scope: functionStorage
   properties: {
@@ -89,45 +91,24 @@ resource functionStorageAccountContributor 'Microsoft.Authorization/roleAssignme
   }
 }
 
-resource functionWorkloadStorageContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(workloadStorage.id, functionPrincipalId, storageBlobDataContributorRoleId)
-  scope: workloadStorage
+resource workloadBlob 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = {
+  parent: workloadStorage
+  name: 'default'
+}
+resource workloadContainers 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' existing = [for name in ['esg-files', 'poc-esg-trigger-data-factory']: {
+  parent: workloadBlob
+  name: name
+}]
+var consumers = [functionPrincipalId, dataFactoryPrincipalId, foundryProjectPrincipalId, databricksAccessConnectorPrincipalId]
+resource workloadContainerRoles 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for i in range(0, 8): {
+  name: guid(workloadContainers[i % 2].id, consumers[i / 2], storageBlobDataContributorRoleId)
+  scope: workloadContainers[i % 2]
   properties: {
-    principalId: functionPrincipalId
+    principalId: consumers[i / 2]
     principalType: 'ServicePrincipal'
     roleDefinitionId: storageBlobDataContributorRoleId
   }
-}
-
-resource dataFactoryStorageContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(workloadStorage.id, dataFactoryPrincipalId, storageBlobDataContributorRoleId)
-  scope: workloadStorage
-  properties: {
-    principalId: dataFactoryPrincipalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: storageBlobDataContributorRoleId
-  }
-}
-
-resource foundryStorageContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(workloadStorage.id, foundryProjectPrincipalId, storageBlobDataContributorRoleId)
-  scope: workloadStorage
-  properties: {
-    principalId: foundryProjectPrincipalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: storageBlobDataContributorRoleId
-  }
-}
-
-resource databricksStorageContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(workloadStorage.id, databricksAccessConnectorPrincipalId, storageBlobDataContributorRoleId)
-  scope: workloadStorage
-  properties: {
-    principalId: databricksAccessConnectorPrincipalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: storageBlobDataContributorRoleId
-  }
-}
+}]
 
 resource functionFoundryUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(foundry.id, functionPrincipalId, cognitiveServicesUserRoleId)
@@ -170,11 +151,11 @@ resource dataFactoryDatabricksContributor 'Microsoft.Authorization/roleAssignmen
 }
 
 resource functionCosmosDataContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
-  name: guid(cosmos.id, functionPrincipalId, 'cosmos-data-contributor')
+  name: guid(cosmos.id, functionPrincipalId, 'esg-db-data-contributor')
   parent: cosmos
   properties: {
     principalId: functionPrincipalId
     roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
-    scope: cosmos.id
+    scope: '${cosmos.id}/dbs/esg-db'
   }
 }

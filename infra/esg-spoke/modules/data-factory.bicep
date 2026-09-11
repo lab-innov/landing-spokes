@@ -6,6 +6,8 @@ param factoryName string
 param workloadStorageResourceId string
 param databricksWorkspaceResourceId string
 param logAnalyticsWorkspaceResourceId string
+param siemAuthorizationRuleId string
+param siemEventHubName string
 
 resource factory 'Microsoft.DataFactory/factories@2018-06-01' = {
   name: factoryName
@@ -70,6 +72,8 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
   scope: factory
   properties: {
     workspaceId: logAnalyticsWorkspaceResourceId
+    eventHubAuthorizationRuleId: empty(siemAuthorizationRuleId) ? null : siemAuthorizationRuleId
+    eventHubName: empty(siemEventHubName) ? null : siemEventHubName
     logs: [
       {
         categoryGroup: 'allLogs'

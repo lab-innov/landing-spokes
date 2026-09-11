@@ -9,6 +9,8 @@ param publicSubnetName string
 param privateSubnetName string
 param managedResourceGroupName string
 param logAnalyticsWorkspaceResourceId string
+param siemAuthorizationRuleId string
+param siemEventHubName string
 
 resource workspace 'Microsoft.Databricks/workspaces@2024-05-01' = {
   name: workspaceName
@@ -53,6 +55,8 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
   scope: workspace
   properties: {
     workspaceId: logAnalyticsWorkspaceResourceId
+    eventHubAuthorizationRuleId: empty(siemAuthorizationRuleId) ? null : siemAuthorizationRuleId
+    eventHubName: empty(siemEventHubName) ? null : siemEventHubName
     logs: [
       {
         categoryGroup: 'allLogs'

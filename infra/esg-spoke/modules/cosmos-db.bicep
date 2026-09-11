@@ -5,6 +5,8 @@ param tags object = {}
 param accountName string
 param databaseName string
 param logAnalyticsWorkspaceResourceId string
+param siemAuthorizationRuleId string
+param siemEventHubName string
 
 resource account 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
   name: accountName
@@ -128,6 +130,8 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
   scope: account
   properties: {
     workspaceId: logAnalyticsWorkspaceResourceId
+    eventHubAuthorizationRuleId: empty(siemAuthorizationRuleId) ? null : siemAuthorizationRuleId
+    eventHubName: empty(siemEventHubName) ? null : siemEventHubName
     logs: [
       {
         categoryGroup: 'allLogs'
