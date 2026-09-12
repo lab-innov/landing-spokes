@@ -1,0 +1,171 @@
+{
+  "source": "main-6.bicep",
+  "sha256": "5e6eb973768582fa14d11cd510994fcd8cf3b6f7c289f0b1b8ae4ce6d2cb7fb3",
+  "resourceCounts": {
+    "Microsoft.CognitiveServices/accounts": 2,
+    "Microsoft.DocumentDB/databaseAccounts": 1,
+    "Microsoft.KeyVault/vaults": 1,
+    "Microsoft.OperationalInsights/workspaces": 1,
+    "Microsoft.Storage/storageAccounts": 2,
+    "Microsoft.Web/serverfarms": 1,
+    "microsoft.alertsmanagement/smartdetectoralertrules": 1,
+    "Microsoft.CognitiveServices/accounts/defenderForAISettings": 1,
+    "Microsoft.CognitiveServices/accounts/deployments": 3,
+    "Microsoft.CognitiveServices/accounts/raiPolicies": 2,
+    "Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions": 2,
+    "Microsoft.DocumentDB/databaseAccounts/gremlinRoleDefinitions": 2,
+    "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions": 2,
+    "Microsoft.DocumentDB/databaseAccounts/sqlDatabases": 1,
+    "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions": 2,
+    "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions": 2,
+    "microsoft.insights/components": 1,
+    "microsoft.insights/components/ProactiveDetectionConfigs": 13,
+    "Microsoft.OperationalInsights/workspaces/savedSearches": 39,
+    "Microsoft.OperationalInsights/workspaces/tables": 686,
+    "Microsoft.Storage/storageAccounts/blobServices": 2,
+    "Microsoft.Storage/storageAccounts/fileServices": 2,
+    "Microsoft.Storage/storageAccounts/queueServices": 2,
+    "Microsoft.Storage/storageAccounts/tableServices": 2,
+    "Microsoft.Web/sites": 1,
+    "Microsoft.Web/sites/basicPublishingCredentialsPolicies": 2,
+    "Microsoft.Web/sites/config": 1,
+    "Microsoft.Web/sites/functions": 15,
+    "Microsoft.Web/sites/hostNameBindings": 1,
+    "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers": 2,
+    "Microsoft.Storage/storageAccounts/blobServices/containers": 10,
+    "Microsoft.Storage/storageAccounts/queueServices/queues": 10,
+    "Microsoft.Storage/storageAccounts/tableServices/tables": 8
+  },
+  "functions": [
+    {
+      "name": "activityOrchestrator",
+      "bindings": [
+        "orchestrationTrigger"
+      ]
+    },
+    {
+      "name": "cleanTemporalActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "createProject",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "downloadDecDocument",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "extractDocumentContentActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "extractWithOpenAIActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "fill_template_activity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "findOneProjectById",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "getProjects",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "sendNotificationActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "settings",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "signUrl",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "summarizeDecActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "updateDataActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "updateProjectById",
+      "bindings": [
+        "httpTrigger"
+      ]
+    }
+  ],
+  "historicalModels": [
+    {
+      "name": "gpt-4.1",
+      "sku": "GlobalBatch",
+      "capacity": 10021,
+      "model": "gpt-4.1",
+      "version": "2025-04-14"
+    },
+    {
+      "name": "gpt-5.1",
+      "sku": "GlobalBatch",
+      "capacity": 9939,
+      "model": "gpt-5.1",
+      "version": "2025-11-13"
+    },
+    {
+      "name": "gpt-5-2",
+      "sku": "GlobalStandard",
+      "capacity": 200,
+      "model": "gpt-5",
+      "version": "2025-08-07"
+    }
+  ],
+  "database": {
+    "name": "analysis-dec-db",
+    "containers": {
+      "projects": [
+        "/id"
+      ],
+      "settings": [
+        "/id"
+      ]
+    }
+  },
+  "businessContainers": [
+    "basedocuments",
+    "base-templates",
+    "dec-generated"
+  ],
+  "status": "Exportación; estado Azure, configuración y código no verificados."
+}
