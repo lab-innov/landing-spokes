@@ -11,7 +11,7 @@ param subnetPrefixes = {
   privateEndpoints: 'PENDIENTE-IPAM'
   functionsIntegration: 'PENDIENTE-IPAM'
 }
-param firewallPrivateIp = 'PENDIENTE-CAF'
+param routeTableResourceId = 'PENDIENTE-ID-TABLA-CAF'
 param dnsServers = ['PENDIENTE-DNS-CAF']
 param hubVnetResourceId = 'PENDIENTE-ID-HUB'
 param logAnalyticsWorkspaceResourceId = 'PENDIENTE-ID-LOG-ANALYTICS'
@@ -20,3 +20,22 @@ param authenticationClientId = 'PENDIENTE-REGISTRO-ENTRA'
 param applicationSettings = {}
 param allowedOrigins = []
 param activateFunctionApp = false
+
+param tags = { iniciativa: 'ECOCAF', administradoPor: 'Bicep', DataClassification: 'PENDIENTE-CLASIFICACION' }
+param apiClientPrefixes = []
+param operatorPrefixes = []
+param monitorPrefixes = []
+param functionPrivateIps = []
+param allowedPrincipalIds = []
+param extraEgress = []
+param inventoryVerified = false
+param networkVerified = false
+param defenderVerified = false
+param siemVerified = false
+param applicationVerified = false
+param securityApprovalId = ''
+param processesUntrustedFiles = false
+param fileScanningVerified = false
+param actionGroupResourceId = ''
+param siemAuthorizationRuleId = ''
+param siemEventHubName = ''

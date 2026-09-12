@@ -5,27 +5,16 @@ param tags object = {}
 param vnetName string
 param vnetAddressPrefixes array
 param subnetPrefixes object
-param firewallPrivateIp string
+param routeTableResourceId string
+param useRemoteGateways bool
+param apiClientPrefixes array
+param operatorPrefixes array
+param monitorPrefixes array
+param functionPrivateIps array
+param extraEgress array
 @minLength(1)
 param dnsServers array
 param hubVnetResourceId string
-
-resource routes 'Microsoft.Network/routeTables@2024-05-01' = {
-  name: '${vnetName}-routes'
-  location: location
-  tags: tags
-  properties: {
-    disableBgpRoutePropagation: false
-    routes: [{
-      name: 'egress-caf'
-      properties: {
-        addressPrefix: '0.0.0.0/0'
-        nextHopType: 'VirtualAppliance'
-        nextHopIpAddress: firewallPrivateIp
-      }
-    }]
-  }
-}
 
 var subnetDefinitions = [
   {
@@ -42,26 +31,20 @@ var subnetDefinitions = [
   }
 ]
 
-resource subnetNsgs 'Microsoft.Network/networkSecurityGroups@2024-05-01' = [for subnet in subnetDefinitions: {
-  name: 'nsg-${subnet.name}'
-  location: location
-  tags: tags
-  properties: {
-    securityRules: subnet.name == 'snet-private-endpoints' ? [
-      {
-        name: 'AllowHttpsFromVirtualNetwork'
-        properties: {
-          priority: 100
-          access: 'Allow'
-          direction: 'Inbound'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '443'
-          sourceAddressPrefix: 'VirtualNetwork'
-          destinationAddressPrefix: '*'
-        }
-      }
-    ] : []
+module subnetNsgs './nsg.bicep' = [for (purpose, i) in ['privateEndpoints', 'functionsIntegration']: {
+  name: 'nsg-${purpose}'
+  params: {
+    name: 'nsg-${subnetDefinitions[i].name}'
+    location: location
+    tags: tags
+    purpose: purpose
+    prefixes: subnetPrefixes
+    dnsServers: dnsServers
+    apiClientPrefixes: apiClientPrefixes
+    operatorPrefixes: operatorPrefixes
+    monitorPrefixes: monitorPrefixes
+    functionPrivateIps: functionPrivateIps
+    extraEgress: extraEgress
   }
 }]
 
@@ -81,10 +64,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
       properties: {
         addressPrefix: subnet.prefix
         routeTable: {
-          id: routes.id
+          id: routeTableResourceId
         }
         networkSecurityGroup: {
-          id: subnetNsgs[index].id
+          id: subnetNsgs[index].outputs.id
         }
         privateEndpointNetworkPolicies: subnet.privateEndpointNetworkPolicies
         delegations: empty(subnet.delegation) ? [] : [
@@ -110,7 +93,7 @@ resource spokeToHubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeer
     remoteVirtualNetwork: {
       id: hubVnetResourceId
     }
-    useRemoteGateways: false
+    useRemoteGateways: useRemoteGateways
   }
 }
 
