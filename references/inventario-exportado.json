@@ -1,0 +1,133 @@
+{
+  "source": "main-5.bicep",
+  "sha256": "2f6cf39b2942842fb81f8cd9ecba425012fa792e03d4043389bab3c1de79cd2b",
+  "resourceCounts": {
+    "Microsoft.CognitiveServices/accounts": 2,
+    "Microsoft.DocumentDB/databaseAccounts": 1,
+    "Microsoft.Storage/storageAccounts": 2,
+    "Microsoft.Web/serverfarms": 1,
+    "Microsoft.CognitiveServices/accounts/defenderForAISettings": 1,
+    "Microsoft.CognitiveServices/accounts/deployments": 1,
+    "Microsoft.CognitiveServices/accounts/raiPolicies": 2,
+    "Microsoft.DocumentDB/databaseAccounts/gremlinRoleDefinitions": 2,
+    "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions": 2,
+    "Microsoft.DocumentDB/databaseAccounts/sqlDatabases": 1,
+    "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions": 2,
+    "Microsoft.Storage/storageAccounts/blobServices": 2,
+    "Microsoft.Storage/storageAccounts/fileServices": 2,
+    "Microsoft.Storage/storageAccounts/queueServices": 2,
+    "Microsoft.Storage/storageAccounts/tableServices": 2,
+    "Microsoft.Web/sites": 1,
+    "Microsoft.Web/sites/basicPublishingCredentialsPolicies": 2,
+    "Microsoft.Web/sites/config": 1,
+    "Microsoft.Web/sites/deployments": 11,
+    "Microsoft.Web/sites/functions": 15,
+    "Microsoft.Web/sites/hostNameBindings": 1,
+    "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers": 2,
+    "Microsoft.Storage/storageAccounts/blobServices/containers": 7,
+    "Microsoft.Storage/storageAccounts/queueServices/queues": 10,
+    "Microsoft.Storage/storageAccounts/tableServices/tables": 6
+  },
+  "models": [
+    {
+      "name": "gpt-5",
+      "model": "gpt-5",
+      "version": "2025-08-07",
+      "sku": "GlobalBatch",
+      "capacity": 10443
+    }
+  ],
+  "functions": [
+    {
+      "name": "activityOrchestrator",
+      "bindings": [
+        "orchestrationTrigger"
+      ]
+    },
+    {
+      "name": "cleanTemporalActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "createProject",
+      "bindings": [
+        "durableClient",
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "extractDocumentContentActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "extractWithOpenAIActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "fillTemplateActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "findOneProjectById",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "getProjects",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "openapi_json",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "openapi_yaml",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "sendNotificationActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "signUrl",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "swagger_ui",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "updateDataActivity",
+      "bindings": [
+        "activityTrigger"
+      ]
+    },
+    {
+      "name": "updateProjectById",
+      "bindings": [
+        "httpTrigger"
+      ]
+    }
+  ]
+}

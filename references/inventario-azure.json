@@ -1,0 +1,129 @@
+{
+  "checkedAt": "2026-09-14",
+  "sourceResourceGroup": "RG-POC-PreMop-CR",
+  "readOnly": true,
+  "resources": [
+    {
+      "location": "eastus",
+      "name": "APPSP-PoCPreMop-cr",
+      "type": "Microsoft.Web/serverFarms"
+    },
+    {
+      "location": "eastus",
+      "name": "cdb-premop-cr",
+      "type": "Microsoft.DocumentDb/databaseAccounts"
+    },
+    {
+      "location": "eastus",
+      "name": "asafunctpremopcr",
+      "type": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "location": "eastus",
+      "name": "azfunc-premop-CR",
+      "type": "Microsoft.Web/sites"
+    },
+    {
+      "location": "eastus",
+      "name": "aspremop",
+      "type": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "location": "eastus",
+      "name": "di-premop-cr",
+      "type": "Microsoft.CognitiveServices/accounts"
+    },
+    {
+      "location": "eastus",
+      "name": "oai-mop-express-cr",
+      "type": "Microsoft.CognitiveServices/accounts"
+    }
+  ],
+  "database": {
+    "name": "premop-db",
+    "containers": [
+      {
+        "defaultTtl": null,
+        "indexingPolicy": {
+          "automatic": true,
+          "compositeIndexes": null,
+          "excludedPaths": [
+            {
+              "path": "/\"_etag\"/?"
+            }
+          ],
+          "fullTextIndexes": [],
+          "includedPaths": [
+            {
+              "indexes": null,
+              "path": "/*"
+            }
+          ],
+          "indexingMode": "consistent",
+          "spatialIndexes": null,
+          "vectorIndexes": null
+        },
+        "name": "projects",
+        "partitionKey": {
+          "kind": "Hash",
+          "paths": [
+            "/id"
+          ],
+          "systemKey": null,
+          "version": 2
+        },
+        "uniqueKeyPolicy": {
+          "uniqueKeys": []
+        }
+      },
+      {
+        "defaultTtl": null,
+        "indexingPolicy": {
+          "automatic": true,
+          "compositeIndexes": null,
+          "excludedPaths": [
+            {
+              "path": "/\"_etag\"/?"
+            }
+          ],
+          "fullTextIndexes": [],
+          "includedPaths": [
+            {
+              "indexes": null,
+              "path": "/*"
+            }
+          ],
+          "indexingMode": "consistent",
+          "spatialIndexes": null,
+          "vectorIndexes": null
+        },
+        "name": "settings",
+        "partitionKey": {
+          "kind": "Hash",
+          "paths": [
+            "/id"
+          ],
+          "systemKey": null,
+          "version": 2
+        },
+        "uniqueKeyPolicy": {
+          "uniqueKeys": []
+        }
+      }
+    ]
+  },
+  "functionConfiguration": {
+    "alwaysOn": true,
+    "linuxFxVersion": "python|3.13"
+  },
+  "documentsStorage": {
+    "name": "aspremop",
+    "kind": "StorageV2",
+    "sku": "Standard_RAGRS"
+  },
+  "plan": {
+    "name": "APPSP-PoCPreMop-cr",
+    "sku": "B2",
+    "capacity": 1
+  }
+}

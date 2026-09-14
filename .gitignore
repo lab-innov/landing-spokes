@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+environments/*.json
+environments/*.bicepparam
+!environments/*.example.bicepparam
+*.local.*
