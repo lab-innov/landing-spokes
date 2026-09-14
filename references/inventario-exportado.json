@@ -1,0 +1,97 @@
+{
+  "source": "main-7.bicep",
+  "sha256": "57b2486fe2aeaacad74eb11bd893f026122921068201164ae8d0669d96eec624",
+  "resourceCounts": {
+    "Microsoft.CognitiveServices/accounts": 2,
+    "Microsoft.DocumentDB/databaseAccounts": 1,
+    "Microsoft.Storage/storageAccounts": 2,
+    "Microsoft.Web/serverfarms": 1,
+    "Microsoft.CognitiveServices/accounts/defenderForAISettings": 1,
+    "Microsoft.CognitiveServices/accounts/deployments": 1,
+    "Microsoft.CognitiveServices/accounts/raiPolicies": 2,
+    "Microsoft.DocumentDB/databaseAccounts/gremlinRoleDefinitions": 2,
+    "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions": 2,
+    "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions": 2,
+    "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions": 2,
+    "Microsoft.EventGrid/systemTopics": 1,
+    "Microsoft.EventGrid/systemTopics/eventSubscriptions": 1,
+    "Microsoft.Storage/storageAccounts/blobServices": 2,
+    "Microsoft.Storage/storageAccounts/fileServices": 2,
+    "Microsoft.Storage/storageAccounts/queueServices": 2,
+    "Microsoft.Storage/storageAccounts/tableServices": 2,
+    "Microsoft.Web/sites": 1,
+    "Microsoft.Web/sites/basicPublishingCredentialsPolicies": 2,
+    "Microsoft.Web/sites/config": 1,
+    "Microsoft.Web/sites/deployments": 11,
+    "Microsoft.Web/sites/functions": 9,
+    "Microsoft.Web/sites/hostNameBindings": 1,
+    "Microsoft.Storage/storageAccounts/blobServices/containers": 8,
+    "Microsoft.Storage/storageAccounts/queueServices/queues": 8,
+    "Microsoft.Storage/storageAccounts/tableServices/tables": 3
+  },
+  "models": [
+    {
+      "name": "gpt-4o-batch",
+      "model": "gpt-4o",
+      "version": "2024-08-06",
+      "sku": "GlobalBatch",
+      "capacity": 33741
+    }
+  ],
+  "functions": [
+    {
+      "name": "delete_file",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "document_intelligence_processing",
+      "bindings": [
+        "blobTrigger"
+      ]
+    },
+    {
+      "name": "execute_analyzer",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "get_analysis",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "get_analysis_by_id",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "get_folders_documents",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "reminder_notification",
+      "bindings": [
+        "timerTrigger"
+      ]
+    },
+    {
+      "name": "update_analysis_by_id",
+      "bindings": [
+        "httpTrigger"
+      ]
+    },
+    {
+      "name": "upload_files",
+      "bindings": [
+        "httpTrigger"
+      ]
+    }
+  ]
+}

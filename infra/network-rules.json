@@ -1,0 +1,244 @@
+{
+  "functionsIntegration": [
+    {
+      "name": "datos-privados",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 200
+      }
+    },
+    {
+      "name": "dns-caf",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "dns",
+        "destinationPortRanges": [
+          "53"
+        ],
+        "priority": 220
+      }
+    },
+    {
+      "name": "dns-azure",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "168.63.129.16",
+        "destinationPortRanges": [
+          "53"
+        ],
+        "priority": 230
+      }
+    },
+    {
+      "name": "monitor-privado",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "monitor",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 240
+      }
+    },
+    {
+      "name": "entra",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "AzureActiveDirectory",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 250
+      }
+    },
+    {
+      "name": "monitor-servicio",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "AzureMonitor",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 260
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    },
+    {
+      "name": "cosmos-directo",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "cosmos",
+        "destinationPortRanges": [
+          "0-65535"
+        ],
+        "priority": 1000
+      }
+    }
+  ],
+  "privateEndpoints": [
+    {
+      "name": "https-functionsintegration",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 210
+      }
+    },
+    {
+      "name": "https-operators",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "operators",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 240
+      }
+    },
+    {
+      "name": "api-caf",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "clients",
+        "destinationAddressPrefix": "function",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 310
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    },
+    {
+      "name": "cosmos-directo",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "functionsIntegration",
+        "destinationAddressPrefix": "cosmos",
+        "destinationPortRanges": [
+          "0-65535"
+        ],
+        "priority": 1000
+      }
+    },
+    {
+      "name": "procesador-datos",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "processor",
+        "destinationAddressPrefix": "processorData",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 260
+      }
+    },
+    {
+      "name": "procesador-cosmos",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "processor",
+        "destinationAddressPrefix": "cosmos",
+        "destinationPortRanges": [
+          "0-65535"
+        ],
+        "priority": 1010
+      }
+    }
+  ]
+}

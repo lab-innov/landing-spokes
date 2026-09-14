@@ -1,0 +1,113 @@
+{
+  "checkedAt": "2026-09-14T13:12:09.041617+00:00",
+  "sourceResourceGroup": "RG-POC-VINCULADOR-CR",
+  "readOnly": true,
+  "pipelines": [
+    {
+      "activities": [
+        {
+          "fileName": {
+            "type": "Expression",
+            "value": "@pipeline().parameters.fileName"
+          },
+          "linkedService": "VINCULADOR_PROCESSING",
+          "name": "VINCULADOR_DMAF",
+          "notebookPath": "/Repos/iData/Caf-vinculador-model/model_processing",
+          "policy": {
+            "retry": 0,
+            "retryIntervalInSeconds": 30,
+            "secureInput": false,
+            "secureOutput": false,
+            "timeout": "0.12:00:00"
+          },
+          "type": "DatabricksNotebook"
+        }
+      ],
+      "name": "VINCULADOR_DMAF",
+      "parameters": {
+        "fileName": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "triggers": [
+    {
+      "blobPathBeginsWith": "/poc-vinculador-trigger-data-factory/blobs/",
+      "blobPathEndsWith": ".json",
+      "events": [
+        "Microsoft.Storage.BlobCreated"
+      ],
+      "ignoreEmptyBlobs": true,
+      "name": "trigger_blob_storage",
+      "pipelines": [
+        {
+          "parameters": {
+            "fileName": "@triggerBody().fileName"
+          },
+          "pipelineReference": {
+            "referenceName": "VINCULADOR_DMAF",
+            "type": "PipelineReference"
+          }
+        }
+      ],
+      "runtimeState": "Started",
+      "type": "BlobEventsTrigger"
+    }
+  ],
+  "linkedservices": [
+    {
+      "authentication": null,
+      "clusterId": "1129-200729-2q9ok5gy",
+      "domain": "https://adb-4703854898246192.12.azuredatabricks.net",
+      "name": "VINCULADOR_PROCESSING",
+      "type": "AzureDatabricks"
+    }
+  ],
+  "databases": [
+    {
+      "name": "vinculador-db",
+      "containers": [
+        {
+          "conflictResolutionPolicy": {
+            "conflictResolutionPath": "/_ts",
+            "conflictResolutionProcedure": "",
+            "mode": "LastWriterWins"
+          },
+          "defaultTtl": null,
+          "indexingPolicy": {
+            "automatic": true,
+            "compositeIndexes": null,
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ],
+            "fullTextIndexes": [],
+            "includedPaths": [
+              {
+                "indexes": null,
+                "path": "/*"
+              }
+            ],
+            "indexingMode": "consistent",
+            "spatialIndexes": null,
+            "vectorIndexes": null
+          },
+          "name": "analysis",
+          "partitionKey": {
+            "kind": "Hash",
+            "paths": [
+              "/id"
+            ],
+            "systemKey": null,
+            "version": 2
+          },
+          "uniqueKeyPolicy": {
+            "uniqueKeys": []
+          }
+        }
+      ]
+    }
+  ]
+}

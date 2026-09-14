@@ -1,0 +1,25 @@
+{
+  "code": "ExportTemplateCompletedWithErrors",
+  "omittedTypes": [
+    "Microsoft.DataFactory/factories",
+    "Microsoft.Storage/storageAccounts/inventoryPolicies",
+    "Microsoft.DocumentDB/databaseAccounts/graphs",
+    "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+    "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
+    "Microsoft.DocumentDB/databaseAccounts/notebookWorkspaces",
+    "Microsoft.DocumentDB/databaseAccounts/tableRoleAssignments",
+    "Microsoft.DocumentDB/databaseAccounts/mongodbRoleDefinitions",
+    "Microsoft.DocumentDB/databaseAccounts/mongodbUserDefinitions",
+    "Microsoft.DocumentDB/databaseAccounts/cassandraRoleAssignments",
+    "Microsoft.DocumentDB/databaseAccounts/cassandraRoleDefinitions",
+    "Microsoft.DocumentDB/databaseAccounts/privateEndpointConnections",
+    "Microsoft.Web/sites/extensions",
+    "Microsoft.Web/sites/certificates",
+    "Microsoft.Web/sites/siteextensions",
+    "Microsoft.Web/sites/sitecontainers",
+    "Microsoft.Web/sites/hybridconnection",
+    "Microsoft.Web/sites/functions/keys",
+    "Microsoft.CognitiveServices/accounts/computes",
+    "Microsoft.CognitiveServices/accounts/testRaiExternalSafetyProvider"
+  ]
+}
