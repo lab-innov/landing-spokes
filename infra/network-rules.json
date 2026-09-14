@@ -1,0 +1,702 @@
+{
+  "foundry": [
+    {
+      "name": "trafico-interno",
+      "properties": {
+        "priority": 100,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "foundry",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "salida-interna",
+      "properties": {
+        "priority": 110,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "foundry",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "sondas-azure",
+      "properties": {
+        "priority": 120,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "AzureLoadBalancer",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "foundry",
+        "destinationPortRanges": [
+          "30000-32767"
+        ]
+      }
+    },
+    {
+      "name": "datos-privados",
+      "properties": {
+        "priority": 130,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "cosmos-directo",
+      "properties": {
+        "priority": 140,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "cosmosEndpoint",
+        "destinationPortRanges": [
+          "0-65535"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-azureactivedirectory",
+      "properties": {
+        "priority": 150,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "AzureActiveDirectory",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-microsoftcontainerregistry",
+      "properties": {
+        "priority": 160,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "MicrosoftContainerRegistry",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-azurefrontdoor-firstparty",
+      "properties": {
+        "priority": 170,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "AzureFrontDoor.FirstParty",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-azuremonitor",
+      "properties": {
+        "priority": 180,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "AzureMonitor",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-storage-eastus",
+      "properties": {
+        "priority": 190,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "Storage.EastUS",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dns-corporativo",
+      "properties": {
+        "priority": 200,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "dns",
+        "destinationPortRanges": [
+          "53"
+        ]
+      }
+    },
+    {
+      "name": "dns-plataforma",
+      "properties": {
+        "priority": 210,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "168.63.129.16",
+        "destinationPortRanges": [
+          "53"
+        ]
+      }
+    },
+    {
+      "name": "monitor-privado",
+      "properties": {
+        "priority": 220,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "monitor",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "priority": 4096,
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "priority": 4096,
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    }
+  ],
+  "containers": [
+    {
+      "name": "trafico-interno",
+      "properties": {
+        "priority": 100,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "containers",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "salida-interna",
+      "properties": {
+        "priority": 110,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "containers",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "sondas-azure",
+      "properties": {
+        "priority": 120,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "AzureLoadBalancer",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "containers",
+        "destinationPortRanges": [
+          "30000-32767"
+        ]
+      }
+    },
+    {
+      "name": "https-desde-gateway",
+      "properties": {
+        "priority": 130,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "appGateway",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "containers",
+        "destinationPortRanges": [
+          "443",
+          "31443"
+        ]
+      }
+    },
+    {
+      "name": "datos-privados",
+      "properties": {
+        "priority": 140,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-azureactivedirectory",
+      "properties": {
+        "priority": 150,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "AzureActiveDirectory",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-microsoftcontainerregistry",
+      "properties": {
+        "priority": 160,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "MicrosoftContainerRegistry",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-azurefrontdoor-firstparty",
+      "properties": {
+        "priority": 170,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "AzureFrontDoor.FirstParty",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-azuremonitor",
+      "properties": {
+        "priority": 180,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "AzureMonitor",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dependencia-storage-eastus",
+      "properties": {
+        "priority": 190,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "Storage.EastUS",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dns-corporativo",
+      "properties": {
+        "priority": 200,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "dns",
+        "destinationPortRanges": [
+          "53"
+        ]
+      }
+    },
+    {
+      "name": "dns-plataforma",
+      "properties": {
+        "priority": 210,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "168.63.129.16",
+        "destinationPortRanges": [
+          "53"
+        ]
+      }
+    },
+    {
+      "name": "monitor-privado",
+      "properties": {
+        "priority": 220,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "monitor",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "priority": 4096,
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "priority": 4096,
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    }
+  ],
+  "appGateway": [
+    {
+      "name": "web-desde-caf",
+      "properties": {
+        "priority": 100,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "clients",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "appGateway",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "sondas-azure",
+      "properties": {
+        "priority": 110,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "AzureLoadBalancer",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "appGateway",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "frontend-https",
+      "properties": {
+        "priority": 120,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "appGateway",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "containers",
+        "destinationPortRanges": [
+          "443",
+          "31443"
+        ]
+      }
+    },
+    {
+      "name": "certificado-privado",
+      "properties": {
+        "priority": 130,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "appGateway",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "vaultEndpoint",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "dns-corporativo",
+      "properties": {
+        "priority": 140,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "appGateway",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "dns",
+        "destinationPortRanges": [
+          "53"
+        ]
+      }
+    },
+    {
+      "name": "dns-plataforma",
+      "properties": {
+        "priority": 150,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "appGateway",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "168.63.129.16",
+        "destinationPortRanges": [
+          "53"
+        ]
+      }
+    },
+    {
+      "name": "monitor-privado",
+      "properties": {
+        "priority": 160,
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "appGateway",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "monitor",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "priority": 4096,
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "priority": 4096,
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    }
+  ],
+  "privateEndpoints": [
+    {
+      "name": "https-foundry",
+      "properties": {
+        "priority": 100,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "https-containers",
+      "properties": {
+        "priority": 110,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "containers",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "certificado-gateway",
+      "properties": {
+        "priority": 120,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "appGateway",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "vaultEndpoint",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "cosmos-directo",
+      "properties": {
+        "priority": 130,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "foundry",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "cosmosEndpoint",
+        "destinationPortRanges": [
+          "0-65535"
+        ]
+      }
+    },
+    {
+      "name": "operacion-caf",
+      "properties": {
+        "priority": 140,
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "operators",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ]
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "priority": 4096,
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "priority": 4096,
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "sourcePortRange": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ]
+      }
+    }
+  ]
+}

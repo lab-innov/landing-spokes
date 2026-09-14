@@ -1,0 +1,123 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "workload": {
+      "value": "agent"
+    },
+    "tags": {
+      "value": {
+        "patron": "foundry-agent",
+        "organizacion": "CAF",
+        "iniciativa": "REEMPLAZAR_INICIATIVA",
+        "DataClassification": "REEMPLAZAR_CLASIFICACION"
+      }
+    },
+    "dnsServers": {
+      "value": [
+        "REEMPLAZAR_IP_DNS_CAF"
+      ]
+    },
+    "hubVnetId": {
+      "value": "REEMPLAZAR_ID_VNET_HUB_CAF"
+    },
+    "useRemoteGateways": {
+      "value": false
+    },
+    "cafClientPrefixes": {
+      "value": [
+        "REEMPLAZAR_CIDR_CLIENTES_CAF"
+      ]
+    },
+    "activateAgentRuntime": {
+      "value": false
+    },
+    "deployApplications": {
+      "value": false
+    },
+    "deployGateway": {
+      "value": false
+    },
+    "vnetPrefix": {
+      "value": "REEMPLAZAR_CIDR_IPAM_24"
+    },
+    "routeTableIds": {
+      "value": {
+        "foundry": "REEMPLAZAR_ID_TABLA_RUTAS_CAF",
+        "containers": "REEMPLAZAR_ID_TABLA_RUTAS_CAF",
+        "appGateway": "REEMPLAZAR_ID_TABLA_RUTAS_CAF"
+      }
+    },
+    "logAnalyticsWorkspaceId": {
+      "value": "REEMPLAZAR_ID_LOG_ANALYTICS_CAF"
+    },
+    "actionGroupId": {
+      "value": "REEMPLAZAR_ID_ACTION_GROUP_CAF"
+    },
+    "networkReady": {
+      "value": false
+    },
+    "applicationAuthVerified": {
+      "value": false
+    },
+    "monitoringReady": {
+      "value": false
+    },
+    "gatewayReady": {
+      "value": false
+    },
+    "models": {
+      "value": []
+    },
+    "operatorPrefixes": {
+      "value": []
+    },
+    "monitorPrefixes": {
+      "value": []
+    },
+    "privateServiceAddresses": {
+      "value": {
+        "vault": [],
+        "cosmos": []
+      }
+    },
+    "extraEgress": {
+      "value": {
+        "foundry": [],
+        "containers": [],
+        "appGateway": [],
+        "privateEndpoints": []
+      }
+    },
+    "backendSecretNames": {
+      "value": []
+    },
+    "defenderCoverageVerified": {
+      "value": false
+    },
+    "siemDeliveryVerified": {
+      "value": false
+    },
+    "scanUploads": {
+      "value": true
+    },
+    "uploadGateVerified": {
+      "value": false
+    },
+    "siemAuthorizationRuleId": {
+      "value": ""
+    },
+    "siemEventHubName": {
+      "value": ""
+    },
+    "modelsApproved": {
+      "value": false
+    },
+    "securityApprovalId": {
+      "value": ""
+    }
+  }
+}
