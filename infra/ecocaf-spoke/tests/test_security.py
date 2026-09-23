@@ -38,6 +38,8 @@ class Template(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.arm=json.loads(Path(os.environ['ECO_ARM']).read_text());cls.resources=[]
+        root_resources=cls.arm.get('resources',[])
+        cls.deployments=[r for r in (root_resources.values() if isinstance(root_resources,dict) else root_resources) if r['type']=='Microsoft.Resources/deployments']
         def walk(t):
             resources=t.get('resources',[])
             for r in resources.values() if isinstance(resources,dict) else resources:
@@ -51,7 +53,25 @@ class Template(unittest.TestCase):
             if 'publicNetworkAccess' in r.get('properties',{}):self.assertEqual(r['properties']['publicNetworkAccess'],'Disabled')
         endpoints=[r for r in self.resources if r['type']=='Microsoft.Network/privateEndpoints']
         zone_groups=[r for r in self.resources if r['type']=='Microsoft.Network/privateEndpoints/privateDnsZoneGroups']
+        self.assertEqual(len(endpoints),2)
         self.assertEqual(len(zone_groups),len(endpoints))
+        for endpoint in endpoints:
+            connections=endpoint['properties'].get('privateLinkServiceConnections',[])
+            self.assertEqual(len(connections),1)
+            connection=connections[0]['properties']
+            self.assertTrue(connection.get('privateLinkServiceId'))
+            self.assertTrue(connection.get('groupIds'))
+            self.assertFalse(endpoint['properties'].get('manualPrivateLinkServiceConnections'))
+        for group in zone_groups:
+            self.assertIn('privateDnsZoneConfigs',json.dumps(group['properties']))
+            self.assertIn('privateDnsZoneId',json.dumps(group['properties']))
+        pe_deployments=[d for d in self.deployments if 'privateLinkServiceId' in d['properties'].get('parameters',{})]
+        self.assertEqual(len(pe_deployments),2)
+        deployment_contract=json.dumps(pe_deployments)
+        for group_id in ('blob','queue','table','sites'):
+            self.assertIn(group_id,deployment_contract)
+        self.assertIn("reference('storage').outputs.resourceId.value",deployment_contract)
+        self.assertIn("reference('runtime').outputs.resourceId.value",deployment_contract)
     def test_secure_settings_and_auth(self):
         self.assertEqual(self.arm['parameters']['applicationSettings']['type'],'secureObject')
         self.assertFalse(self.arm['parameters']['activateFunctionApp']['defaultValue'])
@@ -66,9 +86,9 @@ class Template(unittest.TestCase):
             self.assertTrue(any(service.lower() in json.dumps(r).lower() for r in diag))
         blob=next(r for r in self.resources if r['type']=='Microsoft.Storage/storageAccounts/blobServices')['properties']
         self.assertEqual(blob['deleteRetentionPolicy']['days'],14)
-    def test_original_capacity_preserved(self):
+    def test_requested_plan_and_storage_capacity(self):
         plan=next(r for r in self.resources if r['type']=='Microsoft.Web/serverfarms')
-        self.assertEqual(plan['sku']['name'],'P1v3');self.assertEqual(plan['sku']['capacity'],1)
+        self.assertEqual(plan['sku']['name'],'P1v4');self.assertEqual(plan['sku']['tier'],'PremiumV4');self.assertEqual(plan['sku']['capacity'],1)
         storage=next(r for r in self.resources if r['type']=='Microsoft.Storage/storageAccounts')
         self.assertEqual(storage['sku']['name'],'Standard_LRS');self.assertFalse(storage['properties']['allowSharedKeyAccess'])
 

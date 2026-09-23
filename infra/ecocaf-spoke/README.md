@@ -1,7 +1,7 @@
 # ECOCAF: spoke privado
 
 Base modular para una **migración paralela a un RG nuevo**. Conserva la evidencia
-exportada: Function Linux Python 3.13, plan Dedicated P1v3 de una instancia y
+exportada: Function Linux Python 3.13, plan Dedicated P1v4 de una instancia y
 StorageV2 LRS de host. La Function arranca detenida.
 
 Incorpora NSG con permisos explícitos, tabla de rutas corporativa existente,

@@ -10,7 +10,7 @@ La fuente es `main-3.bicep`, un Bicep exportado de 1.395 líneas. Su huella y el
 | Evidencia exportada | Tratamiento |
 | --- | --- |
 | `azfun-POC-ECO-CAF-CR`: Functions Linux, Python 3.13 | Nueva Function App con Functions v4, inicialmente detenida |
-| `appsp-poc-eco-caf-cr`: P1v3, una instancia | Nuevo plan Linux P1v3; es App Service Dedicated, no Elastic Premium |
+| `appsp-poc-eco-caf-cr`: P1v3, una instancia | Nuevo plan Linux P1v4 de una instancia; es App Service Dedicated, no Elastic Premium |
 | `rgpocecocafcraf57`: Storage clásico, Standard_LRS | Nueva cuenta StorageV2 Standard_LRS; no actualiza la cuenta original |
 | Servicios Blob, File, Queue y Table | Se conserva Blob y se habilita conectividad privada Blob/Queue/Table; no hay evidencia de shares ni colas de aplicación |
 | `azure-webjobs-hosts`, `azure-webjobs-secrets` | Contenedores privados vacíos; no copiar claves ni estado del host entre aplicaciones |
@@ -82,7 +82,7 @@ Completar con estas revisiones:
 1. Consultar valores de configuración en un entorno autorizado sin pegarlos en chats ni versionarlos. Relacionar cada endpoint/cuenta/URI de Key Vault con su recurso, grupo, suscripción, permisos y propietario; incluir servicios externos.
 2. Revisar `function_app.py`, `requirements.txt`, `host.json` y el pipeline vigente: clientes de SDK, llamadas HTTP, SQL/Cosmos/Storage, recursos con nombres fijos y credenciales. Los nombres de rutas como `Model`, `kpis` o `documents` no identifican el proveedor usado.
 3. Revisar slots, diagnósticos, RBAC heredado, Application Insights y dependencias observadas en ejecución. Revisar por separado los siete tipos omitidos y configuración de dominios/certificados.
-4. Confirmar frontend y consumidores, autenticación actual, datos a migrar, capacidad P1v3 disponible en la suscripción destino y política de publicación desde la red privada.
+4. Confirmar frontend y consumidores, autenticación actual, datos a migrar, capacidad P1v4 disponible en la unidad de despliegue de la suscripción destino y política de publicación desde la red privada.
 5. Recuperar el contrato real de Blob, Cosmos, OpenAI y Document Intelligence:
    cuentas, grupos, base de datos, contenedor, clave de partición, contenedores Blob,
    modelos/versiones, identidades y roles. Confirmar si ADF y Databricks pertenecen a

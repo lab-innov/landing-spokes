@@ -129,9 +129,9 @@ No introducir secretos o contenido documental en trazas sin política aprobada.
    puede contener ajustes de aplicación. Nunca guardar esos valores en Git.
 3. Ejecutar validate/what-if con suscripción y RG de destino explícitos. Desplegar
    fundación solo dentro de una ventana autorizada, con `activateFunctionApp=false`.
-4. Completar DINE, endpoints, rutas y RBAC; descubrir IP de Function. Recuperar el
+4. Confirmar zonas DNS centrales, endpoints, rutas y RBAC; descubrir IP de Function. Recuperar el
    paquete Python y publicar con Entra desde un ejecutor CAF. Confirmar mecanismos
-   de publicación/contenido compatibles con P1v3; no copiar claves ni leases del host.
+   de publicación/contenido compatibles con P1v4; no copiar claves ni leases del host.
 5. Revisar evidencias: `inventoryVerified`, `networkVerified`, `defenderVerified`,
    `siemVerified`, `applicationVerified`, `securityApprovalId` y control de archivos
    cuando aplique. Con allowlist, IP y Action Group completos, activar de forma
@@ -166,8 +166,10 @@ what-if, cambiar asociación a tabla CAF y retirar recursos/asignaciones antigua
 solo mediante procedimiento explícito del responsable. No afirmar permisos mínimos
 efectivos mientras permanezcan roles amplios heredados o directos.
 
-P1v3 de una instancia y LRS no ofrecen redundancia zonal de esta carga. Se mantienen
-para conservar el dimensionamiento conocido. Recuperación Blob/containers: 14 días;
+P1v4 de una instancia y LRS no ofrecen por sí solos redundancia zonal de esta carga.
+Premium V4 tampoco publica direcciones de salida estables del plan: la salida debe
+seguir la integración de VNet y la ruta corporativa, sin allowlists basadas en esas
+direcciones dinámicas. Recuperación Blob/containers: 14 días;
 versiones cuando HNS está deshabilitado. Definir RTO/RPO y probar restauración,
 capacidad y dependencias antes de declarar resiliencia.
 
@@ -175,6 +177,7 @@ capacidad y dependencias antes de declarar resiliencia.
 
 - [Identidad y roles del host Functions](https://learn.microsoft.com/azure/azure-functions/functions-identity-based-connections-tutorial).
 - [Configuración de Functions](https://learn.microsoft.com/azure/azure-functions/functions-app-settings).
+- [Plan Premium V4](https://learn.microsoft.com/azure/app-service/app-service-configure-premium-v4-tier).
 - [Autorización Entra](https://learn.microsoft.com/azure/app-service/configure-authentication-provider-microsoft).
 - [Defender serverless y limitaciones](https://learn.microsoft.com/azure/defender-for-cloud/serverless-protection).
 - [Malware scanning y resultados](https://learn.microsoft.com/azure/defender-for-cloud/introduction-malware-scanning).

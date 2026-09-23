@@ -17,6 +17,7 @@ no acreditan el estado actual de CAF ni autorizan cambios corporativos.
 | Rutas | Bicep creaba tabla local a partir de IP del firewall | Se sustituye `firewallPrivateIp` por `routeTableResourceId` existente. CAF conserva control de rutas |
 | NSG | Reglas predeterminadas permitían más tráfico que la regla HTTPS visible | Se permite solo tráfico definido para integración y endpoints, con denegación final |
 | Conectividad/DNS | Producción no admite peering y cada endpoint requiere DNS central | Se retira el peering y el DNS personalizado; plataforma crea la conexión Virtual WAN y el Bicep enlaza cada endpoint a IDs de zonas existentes |
+| Asociación de endpoints | La Function aparecía sin Private Endpoint asociado y había endpoints sin DNS | Blob, Queue y Table apuntan al Storage de host; `sites` apunta a la Function. Cada conexión declara `privateLinkServiceId`, `groupIds` y un zone group hacia una zona central existente |
 | Entra | Autenticación obligatoria sin lista de identidades autorizadas | Se añade allowlist por object ID y se bloquea activación incompleta |
 | Roles | Table Data Contributor se asignaba siempre al host | Se exige necesidad explícita de tablas/bindings; Blob Data Owner se conserva para AzureWebJobsStorage |
 | Defender | Sin configuración ni comprobación | Se habilita configuración del Storage de host heredada de CAF; script revisa AppServices/CloudPosture y host Storage |
@@ -40,7 +41,8 @@ no acreditan el estado actual de CAF ni autorizan cambios corporativos.
   que procesan archivos en memoria. Diseñar el control de análisis en la ruta real.
 - **Secretos:** Key Vault dedicado cuando se confirme un consumidor. Las referencias
   a vault existente requieren permisos y conectividad explícitos; no se inventan.
-- **Disponibilidad:** P1v3 de una instancia y Storage LRS se conservan. Revisar ZRS,
+- **Disponibilidad:** el plan se actualiza a P1v4 de una instancia y Storage LRS
+  se conserva. Confirmar disponibilidad de Premium V4 en la unidad de despliegue y revisar ZRS,
   escalado, RTO/RPO y recuperación según clasificación y carga, antes de producción.
 - **Observabilidad:** CAF verifica AMPLS, recepción SOC, Activity Logs, alertas
   Defender y retención central. El DDA pide 90 días online y siete años archivados;
