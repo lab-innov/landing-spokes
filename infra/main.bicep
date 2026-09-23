@@ -6,6 +6,9 @@ param location string = 'eastus'
 type WorkloadTags = {
   @minLength(1)
   iniciativa: string
+  OpsDept: 'DTI'
+  @minLength(1)
+  UserDept: string
   *: string
 }
 param tags WorkloadTags
@@ -15,10 +18,8 @@ param tags WorkloadTags
 param workload string
 @description('Bloque IPv4 /24 aprobado por IPAM; se derivan cuatro subredes.')
 param vnetPrefix string
-@minLength(1)
-param dnsServers array
-@minLength(1)
-param hubVnetId string
+@description('IDs completos de zonas DNS privadas centralizadas en RG-PRIVATEDNS-PR, indexados por groupId.')
+param privateDnsZoneResourceIds object
 @description('IDs de tablas corporativas: foundry, containers y appGateway.')
 type CorporateRoutes = {
   @minLength(1)
@@ -29,7 +30,6 @@ type CorporateRoutes = {
   appGateway: string
 }
 param routeTableIds CorporateRoutes
-param useRemoteGateways bool = false
 @minLength(1)
 param cafClientPrefixes array
 @minLength(1)
@@ -106,7 +106,7 @@ param gatewayHostname string = ''
 param certificateSecretName string = 'appgateway-tls'
 param frontendHealthPath string = '/'
 
-var reservedEnv = ['BACKEND_URL', 'AZURE_CLIENT_ID', 'AZURE_AI_PROJECT_ENDPOINT', 'AZURE_STORAGE_BLOB_ENDPOINT', 'AZURE_STORAGE_CONTAINER', 'AZURE_KEY_VAULT_URL', 'APPLICATIONINSIGHTS_CONNECTION_STRING']
+var reservedEnv = ['BACKEND_URL', 'AZURE_CLIENT_ID', 'AZURE_AI_PROJECT_ENDPOINT', 'AZURE_STORAGE_BLOB_ENDPOINT', 'AZURE_STORAGE_CONTAINER', 'AZURE_KEY_VAULT_URL']
 var octets = split(split(vnetPrefix, '/')[0], '.')
 var privateRange = octets[0] == '10' || (octets[0] == '192' && octets[1] == '168') || (octets[0] == '172' && int(octets[1]) >= 16 && int(octets[1]) <= 29)
 var prefixes = {
@@ -150,10 +150,7 @@ module network './modules/network.bicep' = {
     tags: tags
     name: 'vnet-${workload}-${token}'
     prefixes: prefixes
-    dnsServers: dnsServers
-    hubVnetId: hubVnetId
     routeTableIds: routeTableIds
-    useRemoteGateways: useRemoteGateways
     clientPrefixes: cafClientPrefixes
     operatorPrefixes: operatorPrefixes
     privateServiceAddresses: privateServiceAddresses
@@ -188,6 +185,7 @@ module endpoints './modules/private-endpoint.bicep' = [
       subnetId: network.outputs.peSubnetId
       targetId: services.outputs.targets[i].id
       groupId: services.outputs.targets[i].group
+      privateDnsZoneResourceId: privateDnsZoneResourceIds[services.outputs.targets[i].group]
     }
   }
 ]
@@ -276,4 +274,3 @@ output applicationUrl string = deployGateway ? gateway!.outputs.url : ''
 output subnetPrefixes object = prefixes
 output gatewayAddress string = gatewayPrivateIp
 output requiredWebDnsName string = gatewayHostname
-output applicationInsightsId string = apps.outputs.applicationInsightsId

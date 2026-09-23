@@ -23,18 +23,6 @@ param siemAuthorizationRuleId string
 param siemEventHubName string
 param actionGroupId string
 
-resource insights 'Microsoft.Insights/components@2020-02-02' = {
-  name: 'appi-${token}'
-  location: location
-  tags: tags
-  kind: 'web'
-  properties: {
-    Application_Type: 'web'
-    WorkspaceResourceId: workspaceId
-    publicNetworkAccessForIngestion: 'Disabled'
-    publicNetworkAccessForQuery: 'Disabled'
-  }
-}
 resource environment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: 'cae-${token}'
   location: location
@@ -72,7 +60,6 @@ resource backend 'Microsoft.App/containerApps@2025-01-01' = if (deployApplicatio
               { name: 'AZURE_STORAGE_BLOB_ENDPOINT', value: blobEndpoint }
               { name: 'AZURE_STORAGE_CONTAINER', value: 'uploads' }
               { name: 'AZURE_KEY_VAULT_URL', value: vaultUri }
-              { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: insights.properties.ConnectionString }
             ],
             backendEnv
           )
@@ -153,5 +140,3 @@ resource cpuAlerts 'Microsoft.Insights/metricAlerts@2018-03-01' = [for appName i
   }
   dependsOn: [frontend, backend]
 }]
-
-output applicationInsightsId string = insights.id

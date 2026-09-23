@@ -159,7 +159,7 @@
         "protocol": "*",
         "sourceAddressPrefix": "foundry",
         "sourcePortRange": "*",
-        "destinationAddressPrefix": "dns",
+        "destinationAddressPrefix": "AzurePlatformDNS",
         "destinationPortRanges": [
           "53"
         ]
@@ -387,7 +387,7 @@
         "protocol": "*",
         "sourceAddressPrefix": "containers",
         "sourcePortRange": "*",
-        "destinationAddressPrefix": "dns",
+        "destinationAddressPrefix": "AzurePlatformDNS",
         "destinationPortRanges": [
           "53"
         ]
@@ -525,7 +525,7 @@
         "protocol": "*",
         "sourceAddressPrefix": "appGateway",
         "sourcePortRange": "*",
-        "destinationAddressPrefix": "dns",
+        "destinationAddressPrefix": "AzurePlatformDNS",
         "destinationPortRanges": [
           "53"
         ]

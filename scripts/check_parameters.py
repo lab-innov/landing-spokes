@@ -29,6 +29,8 @@ def check(p):
     require(bool(re.fullmatch(r'[a-z0-9-]{2,12}', p.get('workload', ''))), 'workload: 2-12 caracteres a-z, 0-9 o guion.')
     require(bool(p.get('tags', {}).get('iniciativa')), 'Etiqueta iniciativa requerida.')
     require(bool(p.get('tags', {}).get('DataClassification')), 'Etiqueta DataClassification requerida.')
+    require(p.get('tags', {}).get('OpsDept') == 'DTI', 'Etiqueta OpsDept debe ser DTI.')
+    require(bool(p.get('tags', {}).get('UserDept')), 'Etiqueta UserDept requerida.')
     require(type(p.get('modelsApproved',False)) is bool, 'modelsApproved debe ser booleano.')
     require(not p.get('models') or p.get('modelsApproved') is True, 'Confirmar aprobación explícita de modelos.')
     require(not any(p.get(k) for k in ('activateAgentRuntime','deployApplications','deployGateway')) or bool(p.get('securityApprovalId')), 'Activación requiere identificador de aprobación.')
@@ -40,24 +42,23 @@ def check(p):
         require(not any(net.overlaps(n) for n in RESERVED), 'VNet se solapa con rangos reservados por ACA.')
     except ValueError as exc:
         errors.append(str(exc))
-    for key in ('dnsServers', 'cafClientPrefixes'):
+    for key in ('cafClientPrefixes',):
         values = p.get(key, [])
         require(isinstance(values, list) and bool(values), f'{key}: lista no vacía requerida.')
         for value in values if isinstance(values, list) else []:
             try:
                 candidate = ipaddress.ip_network(value, strict=True)
                 require(candidate.version == 4 and any(candidate.subnet_of(n) for n in PRIVATE), f'{key}: usar IPv4 privada.')
-                if key == 'dnsServers':
-                    require(candidate.prefixlen == 32, 'dnsServers: usar direcciones individuales.')
-                elif nets:
+                if nets:
                     require(not candidate.overlaps(net), 'Clientes VPN y VNet no deben solaparse.')
             except (ValueError, TypeError):
                 errors.append(f'{key}: dirección inválida.')
-    for key, kind in [('hubVnetId', 'Microsoft.Network/virtualNetworks'), ('logAnalyticsWorkspaceId', 'Microsoft.OperationalInsights/workspaces'), ('actionGroupId', 'Microsoft.Insights/actionGroups')]:
+    for key, kind in [('logAnalyticsWorkspaceId', 'Microsoft.OperationalInsights/workspaces'), ('actionGroupId', 'Microsoft.Insights/actionGroups')]:
         require(bool(resource_id(p.get(key), kind)), f'{key}: ID completo requerido.')
+    require(set(p.get('privateDnsZoneResourceIds',{}))=={'account','blob','vault','registry','Sql','searchService'},'Definir todas las zonas DNS privadas de Foundry.')
     for purpose in ('foundry', 'containers', 'appGateway'):
         require(bool(resource_id(p.get('routeTableIds', {}).get(purpose), 'Microsoft.Network/routeTables')), f'routeTableIds.{purpose}: ID completo requerido.')
-    for flag in ('useRemoteGateways', 'networkReady', 'monitoringReady', 'applicationAuthVerified', 'gatewayReady', 'activateAgentRuntime', 'deployApplications', 'deployGateway'):
+    for flag in ('networkReady', 'monitoringReady', 'applicationAuthVerified', 'gatewayReady', 'activateAgentRuntime', 'deployApplications', 'deployGateway'):
         require(type(p.get(flag, False)) is bool, f'{flag}: debe ser booleano.')
     for flag in ('defenderCoverageVerified', 'siemDeliveryVerified', 'uploadGateVerified', 'scanUploads'):
         require(type(p.get(flag, flag == 'scanUploads')) is bool, f'{flag}: debe ser booleano.')
@@ -110,7 +111,7 @@ def check(p):
     require(bool(event_id) == bool(event_name), 'Event Hub requiere ID de regla y nombre juntos.')
     if event_id:
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft.EventHub/namespaces/[^/]+/authorizationRules/[^/]+', event_id)), 'Event Hub requiere ID de regla de autorización del namespace.')
-    reserved_env = {'BACKEND_URL', 'AZURE_CLIENT_ID', 'AZURE_AI_PROJECT_ENDPOINT', 'AZURE_STORAGE_BLOB_ENDPOINT', 'AZURE_STORAGE_CONTAINER', 'AZURE_KEY_VAULT_URL', 'APPLICATIONINSIGHTS_CONNECTION_STRING'}
+    reserved_env = {'BACKEND_URL', 'AZURE_CLIENT_ID', 'AZURE_AI_PROJECT_ENDPOINT', 'AZURE_STORAGE_BLOB_ENDPOINT', 'AZURE_STORAGE_CONTAINER', 'AZURE_KEY_VAULT_URL'}
     for key in ('frontendEnv', 'backendEnv'):
         for entry in p.get(key, []):
             require(entry.get('name') not in reserved_env, f'{key}: no sobrescribir conexiones del contrato.')

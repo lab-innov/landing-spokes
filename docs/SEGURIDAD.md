@@ -23,7 +23,7 @@ predeterminados de Azure. Las respuestas de conexiones permitidas son stateful.
 | Operadores/ejecutores declarados | Endpoints, TCP 443 | Publicación y administración autorizadas |
 | Foundry/ACA | Misma subred | Comunicación interna del servicio administrado |
 | Azure Load Balancer | Sondas del servicio | Salud de infraestructura |
-| Subredes de cómputo/gateway | DNS configurado y DNS de Azure, puerto 53 | Resolución |
+| Subredes de cómputo/gateway | DNS de plataforma de Azure, puerto 53 | Resolución privada mediante zonas centrales asociadas |
 | Foundry/ACA | Etiquetas AAD, MCR, AzureFrontDoor.FirstParty, AzureMonitor y Storage.EastUS, TCP 443 | Dependencias de plataforma |
 | Subredes de cómputo/gateway | IP de AMPLS, TCP 443 | Telemetría privada |
 

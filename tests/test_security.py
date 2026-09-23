@@ -12,7 +12,7 @@ spec.loader.exec_module(security)
 
 class Network(unittest.TestCase):
     profiles = json.loads((ROOT / 'infra/network-rules.json').read_text())
-    addresses = dict(foundry=['10.123.4.0/25'], containers=['10.123.4.128/26'], privateEndpoints=['10.123.4.192/27'], appGateway=['10.123.4.224/27'], vaultEndpoint=['10.123.4.198'], cosmosEndpoint=['10.123.4.202','10.123.4.203'], clients=['10.121.0.0/24'], operators=['10.122.0.4'], monitor=['10.120.1.4'], dns=['10.120.0.4'])
+    addresses = dict(foundry=['10.123.4.0/25'], containers=['10.123.4.128/26'], privateEndpoints=['10.123.4.192/27'], appGateway=['10.123.4.224/27'], vaultEndpoint=['10.123.4.198'], cosmosEndpoint=['10.123.4.202','10.123.4.203'], clients=['10.121.0.0/24'], operators=['10.122.0.4'], monitor=['10.120.1.4'])
     def access(self, purpose, direction, src, dst, port, protocol='Tcp'):
         def matches(token, address):
             if token == '*' or token == address:
@@ -47,7 +47,8 @@ class Network(unittest.TestCase):
         for purpose, source in [('foundry','10.123.4.20'),('containers','10.123.4.140')]:
             self.assertEqual(self.access(purpose,'Outbound',source,'8.8.8.8',443),'Deny')
             self.assertEqual(self.access(purpose,'Outbound',source,'10.125.0.4',443),'Deny')
-            self.assertEqual(self.access(purpose,'Outbound',source,'10.120.0.4',53,'Udp'),'Allow')
+            dns=next(r for r in self.profiles[purpose] if r['properties']['destinationAddressPrefix']=='AzurePlatformDNS')
+            self.assertEqual(dns['properties']['destinationPortRanges'],['53'])
     def test_rule_priorities(self):
         for rules in self.profiles.values():
             for direction in ('Inbound','Outbound'):

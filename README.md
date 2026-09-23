@@ -1,6 +1,6 @@
 # Foundry Agent — spoke privado CAF
 
-Patrón de agentes administrados Foundry Standard con frontend/backend en Container Apps, ACR y Application Gateway WAF privado. East US, una VNet `/24`, VPN del hub, DNS/DINE y observabilidad corporativos.
+Patrón de agentes administrados Foundry Standard con frontend/backend en Container Apps, ACR y Application Gateway WAF privado. East US, una VNet `/24`, conexión corporativa de Virtual WAN, DNS central y observabilidad corporativa.
 
 Entrada: [infra/main.bicep](infra/main.bicep). Ejemplo: [parámetros](environments/main.parameters.example.json), con marcadores que deben sustituirse fuera de Git.
 

@@ -3,10 +3,7 @@ param tags object
 param name string
 @description('CIDR aprobados por IPAM: vnet, foundry, containers, appGateway y privateEndpoints.')
 param prefixes object
-param dnsServers array
-param hubVnetId string
 param routeTableIds object
-param useRemoteGateways bool
 param clientPrefixes array
 
 param privateServiceAddresses object
@@ -21,7 +18,6 @@ module nsgs './nsg.bicep' = [for purpose in ['foundry', 'containers', 'appGatewa
     name: purpose == 'appGateway' ? '${name}-appgw-nsg' : '${name}-${purpose}-nsg'
     purpose: purpose
     prefixes: prefixes
-    dnsServers: dnsServers
     clientPrefixes: clientPrefixes
     operatorPrefixes: operatorPrefixes
     privateServiceAddresses: privateServiceAddresses
@@ -35,7 +31,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   tags: tags
   properties: {
     addressSpace: { addressPrefixes: [prefixes.vnet] }
-    dhcpOptions: { dnsServers: dnsServers }
     subnets: [
       {
         name: 'snet-foundry'
@@ -74,17 +69,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
       }
 
     ]
-  }
-}
-resource peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
-  parent: vnet
-  name: 'to-caf-hub'
-  properties: {
-    remoteVirtualNetwork: { id: hubVnetId }
-    allowVirtualNetworkAccess: true
-    allowForwardedTraffic: true
-    allowGatewayTransit: false
-    useRemoteGateways: useRemoteGateways
   }
 }
 output vnetId string = vnet.id

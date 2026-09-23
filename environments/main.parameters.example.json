@@ -13,19 +13,20 @@
         "patron": "foundry-agent",
         "organizacion": "CAF",
         "iniciativa": "REEMPLAZAR_INICIATIVA",
-        "DataClassification": "REEMPLAZAR_CLASIFICACION"
+        "DataClassification": "REEMPLAZAR_CLASIFICACION",
+        "OpsDept": "DTI",
+        "UserDept": "REEMPLAZAR_AREA_FUNCIONAL"
       }
     },
-    "dnsServers": {
-      "value": [
-        "REEMPLAZAR_IP_DNS_CAF"
-      ]
-    },
-    "hubVnetId": {
-      "value": "REEMPLAZAR_ID_VNET_HUB_CAF"
-    },
-    "useRemoteGateways": {
-      "value": false
+    "privateDnsZoneResourceIds": {
+      "value": {
+        "account": "REEMPLAZAR_ID_ZONA_COGNITIVE_SERVICES",
+        "blob": "REEMPLAZAR_ID_ZONA_BLOB",
+        "vault": "REEMPLAZAR_ID_ZONA_KEY_VAULT",
+        "registry": "REEMPLAZAR_ID_ZONA_ACR",
+        "Sql": "REEMPLAZAR_ID_ZONA_COSMOS_SQL",
+        "searchService": "REEMPLAZAR_ID_ZONA_SEARCH"
+      }
     },
     "cafClientPrefixes": {
       "value": [

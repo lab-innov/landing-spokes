@@ -7,23 +7,24 @@ un bloque RFC1918 /24 sin solapamiento con hub, redes remotas ni clientes VPN.
 La plantilla deriva `.0/25`, `.128/26`, `.192/27` y `.224/27`; no reserva espacio
 para un firewall ni un gateway VPN local. Una IP web ilustrativa es `.254`.
 
-Entregar `hubVnetId`, `dnsServers`, `cafClientPrefixes`, `routeTableIds` (claves
-`foundry`, `containers`, `appGateway`), `logAnalyticsWorkspaceId`, `actionGroupId`
-y etiqueta `iniciativa`. Las tablas deben estar en la región y suscripción de la
+Entregar `cafClientPrefixes`, `routeTableIds` (claves `foundry`, `containers`,
+`appGateway`), `privateDnsZoneResourceIds`, `logAnalyticsWorkspaceId`,
+`actionGroupId` y etiquetas `iniciativa`, `OpsDept=DTI` y `UserDept`. Las tablas
+deben estar en la región y suscripción de la
 VNet y permitir asociación por el operador. No se modifican rutas corporativas.
 Plataforma verifica salida por firewall, dependencias Azure, DNS TCP/UDP 53,
 Entra ID y rutas de retorno de VPN. Los cuatro NSG limitan conexiones por función
 con denegación final. Preparar IP de endpoints, AMPLS y ejecutores siguiendo
 [seguridad común y ajustes por solución](SEGURIDAD.md).
 
-Solo se crea el peering spoke → hub. Empezar con `useRemoteGateways=false`;
-plataforma completa el peering inverso y habilita tránsito del gateway del hub.
-Después usar `true` si corresponde al diseño de VPN corporativa. Verificar ambas
-direcciones de tráfico: un peering creado no prueba acceso VPN.
+La plantilla no crea peerings. En producción, plataforma debe conectar la VNet
+al hub de Virtual WAN por el procedimiento corporativo y comprobar rutas de ida y
+retorno. Una conexión registrada no prueba por sí sola el acceso desde la VPN.
 
 ## DNS y telemetría
 
-DINE debe asociar los siete endpoints a las zonas centrales:
+Cada endpoint crea su grupo DNS y lo asocia a los IDs de las zonas privadas
+centrales entregados por plataforma:
 
 - Foundry: `privatelink.cognitiveservices.azure.com`, `privatelink.openai.azure.com`
   y `privatelink.services.ai.azure.com`.
@@ -37,21 +38,17 @@ Plataforma publica también el dominio de ACA (`containerEnvironmentDomain`,
 registro comodín a `containerEnvironmentIp`) y el nombre web
 (`requiredWebDnsName` a `gatewayAddress`) en DNS corporativo. No asumir que DINE
 cubra esos registros. DNS de la VNet y de clientes VPN debe alcanzar los
-reenviadores/resolvers corporativos. Ninguna zona ni grupo DNS se crea aquí.
+reenviadores/resolvers corporativos. La plantilla no crea zonas DNS privadas.
 
-Application Insights usa Log Analytics central y deshabilita consulta e ingestión
-públicas. Plataforma debe incorporar el componente al AMPLS corporativo y verificar
-su DNS antes de activar las aplicaciones. La plantilla entrega
-`applicationInsightsId`; no modifica AMPLS ni crea otro endpoint de monitorización.
 ACA usa destino `azure-monitor` con diagnóstico a Log Analytics, sin `listKeys`.
 Los diagnósticos de servicios y Blob también se envían al workspace existente;
-la retención la gobierna CAF, no esta plantilla.
+la retención la gobierna CAF, no esta plantilla. La observabilidad de aplicación
+se integra con Dynatrace fuera de este Bicep; no se crea Application Insights.
 
 Alertas: backend no saludable del gateway durante 5 minutos y CPU sostenida
 superior a 450 millones de nanocores para cada aplicación. Revisar estos umbrales
-tras medir carga. El código de aplicación debe instrumentar sus trazas: un
-componente Application Insights no instrumenta por sí mismo los contenedores.
-El runtime Foundry no configura automáticamente tracing de conversaciones.
+tras medir carga. El código de aplicación debe instrumentar sus trazas y el
+runtime Foundry no configura automáticamente el tracing de conversaciones.
 
 ## Aprobaciones comunes
 
@@ -62,7 +59,8 @@ Definir `tags.DataClassification` antes de crear recursos. Proporcionar `modelsA
 1. **Fundación:** todos los indicadores de activación en `false`. Crea red,
    servicios, identidades, endpoints, ACA vacío y observabilidad. Se requieren
    permisos de recursos y asignación de roles. No desplegar modelos no aprobados.
-2. **Runtime:** verificar endpoints aprobados, DNS, firewall, peering, VPN y RBAC;
+2. **Runtime:** verificar endpoints aprobados, DNS, firewall, conexión de Virtual
+   WAN, VPN y RBAC;
    completar `privateServiceAddresses.cosmos`, comprobar Defender y recepción SIEM;
    establecer `defenderCoverageVerified=true`, `siemDeliveryVerified=true`,
    `networkReady=true` y `activateAgentRuntime=true`. La inyección de

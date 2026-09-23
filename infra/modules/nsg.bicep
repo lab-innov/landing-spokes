@@ -3,7 +3,6 @@ param tags object
 param name string
 param purpose string
 param prefixes object
-param dnsServers array
 param clientPrefixes array
 param privateServiceAddresses object
 param operatorPrefixes array
@@ -11,7 +10,7 @@ param monitorPrefixes array
 param extraEgress array
 var profiles = loadJsonContent('../network-rules.json')
 var addresses = prefixes
-var lists = { dns: dnsServers, clients: clientPrefixes, operators: operatorPrefixes, monitor: monitorPrefixes, vaultEndpoint: privateServiceAddresses.vault, cosmosEndpoint: privateServiceAddresses.cosmos }
+var lists = { clients: clientPrefixes, operators: operatorPrefixes, monitor: monitorPrefixes, vaultEndpoint: privateServiceAddresses.vault, cosmosEndpoint: privateServiceAddresses.cosmos }
 var selectedRules = filter(profiles[purpose], rule => !(rule.name == 'operacion-caf' && empty(operatorPrefixes)) && !(rule.name == 'monitor-privado' && empty(monitorPrefixes)) && !(rule.properties.destinationAddressPrefix == 'vaultEndpoint' && empty(privateServiceAddresses.vault)) && !(rule.properties.destinationAddressPrefix == 'cosmosEndpoint' && empty(privateServiceAddresses.cosmos)))
 var rules = [for rule in selectedRules: {
   name: rule.name

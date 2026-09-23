@@ -14,7 +14,7 @@ def rid(kind):
     return f'/subscriptions/{SID}/resourceGroups/caf/providers/{kind}/corporativo'
 
 def foundation():
-    return dict(location='eastus', workload='agent', tags={'iniciativa':'pruebas','DataClassification':'Interna'}, vnetPrefix='10.123.4.0/24', dnsServers=['10.120.0.4'], cafClientPrefixes=['10.121.0.0/24'], hubVnetId=rid('Microsoft.Network/virtualNetworks'), logAnalyticsWorkspaceId=rid('Microsoft.OperationalInsights/workspaces'), actionGroupId=rid('Microsoft.Insights/actionGroups'), routeTableIds={k:rid('Microsoft.Network/routeTables') for k in ('foundry','containers','appGateway')})
+    return dict(location='eastus', workload='agent', tags={'iniciativa':'pruebas','DataClassification':'Interna','OpsDept':'DTI','UserDept':'GPFEI'}, vnetPrefix='10.123.4.0/24', cafClientPrefixes=['10.121.0.0/24'], privateDnsZoneResourceIds={k:rid('Microsoft.Network/privateDnsZones') for k in ('account','blob','vault','registry','Sql','searchService')}, logAnalyticsWorkspaceId=rid('Microsoft.OperationalInsights/workspaces'), actionGroupId=rid('Microsoft.Insights/actionGroups'), routeTableIds={k:rid('Microsoft.Network/routeTables') for k in ('foundry','containers','appGateway')})
 
 def complete():
     return dict(foundation(), modelsApproved=True, securityApprovalId='CAF-PRUEBA', networkReady=True, defenderCoverageVerified=True, siemDeliveryVerified=True, uploadGateVerified=True, monitorPrefixes=['10.120.1.4/32'], privateServiceAddresses={'vault':['10.123.4.198'], 'cosmos':['10.123.4.202','10.123.4.203']}, activateAgentRuntime=True, deployApplications=True, applicationAuthVerified=True, monitoringReady=True, deployGateway=True, gatewayReady=True, gatewayPrivateIp='10.123.4.254', gatewayHostname='agentes.caf.com', frontendImage='caf.azurecr.io/frontend@sha256:'+'a'*64, backendImage='caf.azurecr.io/backend@sha256:'+'b'*64, models=[dict(name='autorizado', model='modelo-autorizado', version='version-autorizada', sku='Standard', capacity=10)])
@@ -69,7 +69,7 @@ class Template(unittest.TestCase):
                 else: yield r
         cls.resources=list(walk(cls.arm))
     def test_no_platform_duplication(self):
-        prohibited=['publicIPAddresses','privateDnsZones','privateDnsZoneGroups','virtualNetworkGateways','bastionHosts','azureFirewalls','routeTables','workspaces']
+        prohibited=['publicIPAddresses','virtualNetworkPeerings','Microsoft.Insights/components','virtualNetworkGateways','bastionHosts','azureFirewalls','routeTables','workspaces']
         for r in self.resources:
             self.assertNotIn(r['type'].split('/')[-1],prohibited)
         self.assertNotIn('listKeys',json.dumps(self.arm))
