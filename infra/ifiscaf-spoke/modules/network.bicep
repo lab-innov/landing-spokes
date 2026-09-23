@@ -6,7 +6,6 @@ param vnetName string
 param vnetAddressPrefixes array
 param subnetPrefixes object
 param routeTableResourceId string
-param hubVnetResourceId string
 
 var subnetDefinitions = [
   {
@@ -103,19 +102,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   }
 }
 
-resource spokeToHubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
-  name: 'peer-${vnetName}-to-hub'
-  parent: vnet
-  properties: {
-    allowForwardedTraffic: true
-    allowGatewayTransit: false
-    allowVirtualNetworkAccess: true
-    remoteVirtualNetwork: {
-      id: hubVnetResourceId
-    }
-    useRemoteGateways: false
-  }
-}
 
 output vnetId string = vnet.id
 output vnetName string = vnet.name
@@ -123,4 +109,3 @@ output peSubnetId string = '${vnet.id}/subnets/snet-private-endpoints'
 output functionsIntegrationSubnetId string = '${vnet.id}/subnets/snet-functions-integration'
 output databricksPublicSubnetName string = 'snet-databricks-public'
 output databricksPrivateSubnetName string = 'snet-databricks-private'
-output spokeToHubPeeringId string = spokeToHubPeering.id

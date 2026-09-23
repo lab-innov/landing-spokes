@@ -1,11 +1,12 @@
 # Spoke seguro de IFISCAF
 
-Se crea un grupo de recursos paralelo en East US, conectado al hub corporativo.
+Se crea un grupo de recursos paralelo en East US. La conexión al hub corporativo
+de Virtual WAN queda a cargo de plataforma.
 Se conserva `RG-POC-IFIS-CR` para revertir la migración.
 
 ## Recursos
 
-- VNet, NSG por subred, tabla de rutas corporativa y peering spoke → hub.
+- VNet, NSG por subred y tabla de rutas corporativa; sin peering creado por el spoke.
 - Subred de Private Endpoints, integración de Functions y dos subredes dedicadas
   a Databricks de /26 o mayores.
 - Azure OpenAI con `gpt-4o-batch` parametrizable y Document Intelligence.
@@ -19,7 +20,7 @@ Se conserva `RG-POC-IFIS-CR` para revertir la migración.
   de API/autenticación web. `AllRules` requiere salida corporativa aprobada para
   el plano de control; no implica aislamiento total de ese plano.
 - Data Factory con VNet administrada y endpoints administrados.
-- Application Insights conectado al Log Analytics central.
+- Diagnósticos en Log Analytics; Dynatrace se integra fuera de este Bicep.
 - Endpoint privado al Storage compartido y `Storage Blob Data Reader` limitado
   a su contenedor para el access connector.
 
@@ -27,18 +28,19 @@ No se despliega Microsoft Foundry.
 
 ## Requisitos de plataforma
 
-Infraestructura proporciona IDs del hub, tabla de rutas, Log Analytics central,
-tenant/aplicación Entra, etiquetas CAF y CIDR aprobados por IPAM. Los rangos de
-ejemplo no son asignaciones autorizadas. Debe crear el peering inverso y aprobar
-la salida por firewall, incluyendo servicios de Azure, Databricks y bibliotecas.
+Infraestructura proporciona tabla de rutas, IDs de zonas DNS privadas centrales,
+Log Analytics, tenant/aplicación Entra, etiquetas CAF y CIDR aprobados por IPAM.
+Los rangos de ejemplo no son asignaciones autorizadas. Debe crear la conexión de
+Virtual WAN y aprobar la salida por firewall, incluyendo servicios de Azure,
+Databricks y bibliotecas.
 
-DINE y DNS Private Resolver administran las zonas y sus grupos; este despliegue
-no los crea. Se requieren las zonas privadas de OpenAI, Cognitive Services,
+DNS Private Resolver administra las zonas centrales; cada endpoint de este
+despliegue crea su grupo DNS, pero no una zona. Se requieren las zonas privadas de OpenAI, Cognitive Services,
 Blob, DFS, Queue, Table, Cosmos, Azure Websites, Data Factory/ADF y Databricks.
 DNS debe cubrir también los endpoints regionales de Cosmos.
 
-La plataforma asocia Application Insights al AMPLS central, aprueba los endpoints
-de ADF y del Storage compartido y autoriza al desplegador a asignar roles en el
+La plataforma coordina Dynatrace, aprueba los endpoints de ADF y del Storage
+compartido y autoriza al desplegador a asignar roles en el
 contenedor compartido. El operador que activa triggers necesita
 `Microsoft.EventGrid/eventSubscriptions/write` en ambos Storage. Verificar
 además la comunicación Storage/Event Grid.

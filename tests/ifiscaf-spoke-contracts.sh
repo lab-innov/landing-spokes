@@ -15,8 +15,13 @@ if rg -n --glob '*.bicep' "publicNetworkAccess:[[:space:]]*'Enabled'|disableLoca
   exit 1
 fi
 
-if rg -n --glob '*.bicep' "privateDnsZoneGroups|privateDnsZoneGroup|Microsoft\.Network/privateDnsZones" "${TARGET_DIR}"; then
-  echo "Private DNS zones and zone groups must be managed by central policy." >&2
+if rg -n --glob '*.bicep' "resource .*Microsoft\.Network/privateDnsZones@" "${TARGET_DIR}"; then
+  echo "Private DNS zones must be existing central resources." >&2
+  exit 1
+fi
+rg -q "privateEndpoints/privateDnsZoneGroups" "${TARGET_DIR}/modules/private-endpoints.bicep"
+if rg -n --glob '*.bicep' "virtualNetworkPeerings|Microsoft\.Insights/components" "${TARGET_DIR}"; then
+  echo "Production spoke must not create peerings or Application Insights." >&2
   exit 1
 fi
 

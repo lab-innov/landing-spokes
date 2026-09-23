@@ -36,10 +36,6 @@ param namePrefix string = 'ifiscaf'
 @description('Tags applied to every resource.')
 param tags object
 
-@description('Corporate hub VNet resource ID. The platform team creates the reverse peering.')
-@minLength(1)
-param hubVnetResourceId string
-
 @description('Existing platform-managed route table resource ID associated with every spoke subnet.')
 @minLength(1)
 param existingRouteTableResourceId string
@@ -47,6 +43,9 @@ param existingRouteTableResourceId string
 @description('Existing central Log Analytics workspace resource ID.')
 @minLength(1)
 param existingLogAnalyticsWorkspaceResourceId string
+
+@description('IDs completos de zonas DNS privadas centralizadas en RG-PRIVATEDNS-PR, indexados por groupId.')
+param privateDnsZoneResourceIds object
 
 @description('Microsoft Entra tenant ID used by Function App authentication.')
 @minLength(1)
@@ -106,7 +105,6 @@ var sharedStorageResourceGroupName = sharedStorageResourceIdSegments[4]
 var sharedStorageAccountName = sharedStorageResourceIdSegments[8]
 var names = {
   vnet: 'vnet-${namePrefix}-secure-${token}'
-  applicationInsights: 'appi-${namePrefix}-secure-${token}'
   workloadStorage: take('st${normalizedPrefix}data${token}', 24)
   functionStorage: take('st${normalizedPrefix}func${token}', 24)
   openAiAccount: take('oai-${namePrefix}-${token}', 64)
@@ -136,18 +134,6 @@ module network './modules/network.bicep' = {
     vnetAddressPrefixes: vnetAddressPrefixes
     subnetPrefixes: subnetPrefixes
     routeTableResourceId: existingRouteTableResourceId
-    hubVnetResourceId: hubVnetResourceId
-  }
-}
-
-module monitoring './modules/monitoring.bicep' = {
-  name: 'ifiscaf-monitoring'
-  scope: spokeResourceGroup
-  params: {
-    location: location
-    tags: tags
-    applicationInsightsName: names.applicationInsights
-    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
   }
 }
 
@@ -272,7 +258,6 @@ module functionApp './modules/function-app.bicep' = {
     integrationSubnetResourceId: network.outputs.functionsIntegrationSubnetId
     tenantId: tenantId
     authenticationClientId: functionAuthenticationClientId
-    applicationInsightsConnectionString: monitoring.outputs.connectionString
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
   }
 }
@@ -386,6 +371,7 @@ module privateEndpoints './modules/private-endpoints.bicep' = {
     tags: tags
     subnetResourceId: network.outputs.peSubnetId
     endpoints: privateEndpointSpecs
+    privateDnsZoneResourceIds: privateDnsZoneResourceIds
   }
 }
 
@@ -417,8 +403,6 @@ module sharedInputAccess './modules/shared-input-access.bicep' = {
 
 output resourceGroupId string = spokeResourceGroup.id
 output vnetId string = network.outputs.vnetId
-output spokeToHubPeeringId string = network.outputs.spokeToHubPeeringId
-output reversePeeringRequired bool = true
 output routeTableResourceId string = existingRouteTableResourceId
 output centralLogAnalyticsWorkspaceResourceId string = existingLogAnalyticsWorkspaceResourceId
 output privateEndpointIds array = privateEndpoints.outputs.resourceIds
@@ -437,12 +421,12 @@ output functionAppHostname string = functionApp.outputs.hostname
 output functionPrincipalId string = functionApp.outputs.principalId
 output dataFactoryPrincipalId string = dataFactory.outputs.principalId
 output sharedSyntheticContainerId string = sharedInputAccess.outputs.containerResourceId
-output dnsOwnership string = 'Central DINE policy and DNS Private Resolver; this deployment creates no private DNS zones or DNS zone groups.'
+output dnsOwnership string = 'Zonas centralizadas y grupos DNS asociados por este despliegue; no se crean zonas privadas.'
 output platformActions array = [
-  'Create the reverse hub-to-spoke peering.'
-  'Confirm DINE-created DNS zone groups and central resolver links for every private endpoint.'
+  'Crear la conexión de Virtual WAN de producción fuera de este despliegue.'
+  'Confirmar enlaces del resolver central para cada zona privada.'
   'Approve the private endpoint to the shared synthetic-data storage account.'
   'Approve Data Factory managed private endpoints to IFIS storage, shared storage, and Databricks.'
-  'Associate Application Insights with the platform Azure Monitor Private Link Scope when public ingestion/query remain disabled.'
+  'Configurar Dynatrace según el proceso de plataforma; no se crea Application Insights.'
   'Add the Data Factory managed identity to Databricks and grant Can Attach To on the Asset Bundle cluster.'
 ]

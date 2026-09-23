@@ -17,7 +17,6 @@ param documentIntelligenceAccountName string
 param integrationSubnetResourceId string
 param tenantId string
 param authenticationClientId string
-param applicationInsightsConnectionString string
 param logAnalyticsWorkspaceResourceId string
 
 resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
@@ -59,10 +58,6 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
       scmMinTlsVersion: '1.2'
       vnetRouteAllEnabled: true
       appSettings: [
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: applicationInsightsConnectionString
-        }
         {
           name: 'AzureWebJobsStorage__accountName'
           value: hostStorageAccountName
