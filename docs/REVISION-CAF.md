@@ -14,7 +14,7 @@ Los documentos describen organización APIM y límites de suscripción que plata
 
 | Componente | Configuración | Motivo |
 | --- | --- | --- |
-| Function | Linux Python 3.13, Functions ~4, plan P1v3 de una instancia, Always On, detenida por defecto | Conserva capacidad del origen; no copia snapshots de las nueve Functions |
+| Function | Linux Python 3.13, Functions ~4, origen P1v3 de una instancia | Destino P1v4 de una instancia, Always On y detenida por defecto; no copia snapshots de las nueve Functions |
 | Identidad web | Entra obligatorio, 401 sin token, object IDs autorizados, HTTPS/TLS 1.2, sin publicación básica | VPN y red privada no sustituyen autenticación ni autorización |
 | Host Storage | StorageV2 Standard_LRS, Blob/Queue/Table privados, sin claves compartidas | Separa estado del host; sustituye la cuenta legacy sin migrar leases ni colas históricas |
 | Documentos Storage | StorageV2 Standard_LRS, Blob y Queue privados, versiones y recuperación 14 días | Conserva los cuatro contenedores funcionales y admite el trigger Blob con identidad |
@@ -25,7 +25,7 @@ Los documentos describen organización APIM y límites de suscripción que plata
 | App Insights | Nuevo componente de carga sobre LAW existente, ingestión/consulta públicas deshabilitadas | Centraliza observabilidad; requiere AMPLS corporativo |
 | VNet | Un `/24`, dos subredes, dos NSG, rutas existentes y DNS de Azure | Producción no crea peering; plataforma completa la conexión Virtual WAN |
 
-B1 no se utiliza: Vinculador tiene P1v3 en el inventario. Tampoco se atribuye HA zonal: una instancia, LRS y Cosmos de una región requieren aprobación de RTO/RPO, carga y restauración. Los modelos Global requieren aprobación de residencia y tratamiento de información. Copias y retenciones nuevas se aplican a recursos nuevos; no representan una migración ya ejecutada.
+B1 no se utiliza: Vinculador tenía P1v3 en el inventario y el destino adopta P1v4 según la observación recibida. Tampoco se atribuye HA zonal: una instancia, LRS y Cosmos de una región requieren aprobación de RTO/RPO, carga y restauración. Los modelos Global requieren aprobación de residencia y tratamiento de información. Copias y retenciones nuevas se aplican a recursos nuevos; no representan una migración ya ejecutada.
 
 ## Red
 

@@ -23,9 +23,11 @@ def check(p):
     for key,kind in [('routeTableResourceId','Microsoft.Network/routeTables'),('logAnalyticsWorkspaceResourceId','Microsoft.OperationalInsights/workspaces')]:
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/'+re.escape(kind)+r'/[^/]+',p.get(key,''))),f'{key}: ID completo requerido.')
     zones=p.get('privateDnsZoneResourceIds',{})
-    require(set(zones)=={'blob','queue','table','sites','cosmosSql','cognitiveServicesAccount','dataFactory'},'Definir todas las zonas DNS privadas de Vinculador.')
+    require(set(zones)=={'blob','queue','table','sites','cosmosSql','cognitiveServicesAccount','openAi','dataFactory'},'Definir todas las zonas DNS privadas de Vinculador.')
+    expected_zones={'blob':'privatelink.blob.core.windows.net','queue':'privatelink.queue.core.windows.net','table':'privatelink.table.core.windows.net','sites':'privatelink.azurewebsites.net','cosmosSql':'privatelink.documents.azure.com','cognitiveServicesAccount':'privatelink.cognitiveservices.azure.com','openAi':'privatelink.openai.azure.com','dataFactory':'privatelink.datafactory.azure.net'}
     for service,zone_id in zones.items():
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/[^/]+',zone_id,re.I)),f'Zona DNS de {service}: usar ID completo en RG-PRIVATEDNS-PR.')
+        require(zone_id.lower().endswith('/'+expected_zones.get(service,'').lower()),f'Zona DNS de {service}: nombre privado incorrecto.')
     if p.get('actionGroupResourceId'):
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft.Insights/actionGroups/[^/]+',p['actionGroupResourceId'])),'Action Group: ID inválido.')
     require(bool(p.get('siemAuthorizationRuleId'))==bool(p.get('siemEventHubName')),'SIEM: proporcionar ID y nombre juntos.')

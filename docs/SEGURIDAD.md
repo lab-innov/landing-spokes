@@ -11,7 +11,7 @@
 | Auditoría | Logs de Function, Blob/Queue/Table, Cosmos, IA y ADF a LAW central; Event Hub opcional | SOC verifica recepción, retención y detecciones; Activity Log y exportación de alertas Defender corresponden a plataforma |
 | Observabilidad | App Insights privado y alertas de 5xx/volumen a Action Group existente | AMPLS, fallos de pipeline, errores Blob/colas poison, tiempos Batch y restauración necesitan pruebas |
 | Archivos | Defender Storage y activación condicionada a `fileScanningVerified` | El código debe impedir procesar archivos pendientes, maliciosos o sin resultado válido |
-| Recuperación | Blob 14 días y versiones; Cosmos continuo 7 días | RTO/RPO, restauración y respaldo antes de migración; P1v3 de una instancia y LRS no equivalen a HA zonal |
+| Recuperación | Blob 14 días y versiones; Cosmos continuo 7 días | RTO/RPO, restauración y respaldo antes de migración; P1v4 de una instancia y LRS no equivalen a HA zonal |
 | Gobierno de IA | Modelos explícitos y aprobación | Purview, SharePoint y guardrails permanecen en el hub por acuerdo; su cumplimiento no está probado por este Bicep |
 
 ## NSG y permisos

@@ -11,7 +11,10 @@ def load(name):
 checker=load('check_parameters');security=load('check_security')
 SID='11111111-1111-1111-1111-111111111111'
 def rid(kind):return f'/subscriptions/{SID}/resourceGroups/caf/providers/{kind}/central'
-def foundation():return dict(tags={'iniciativa':'VINCULADOR','DataClassification':'Interna','OpsDept':'DTI','UserDept':'Área funcional'},functionAppName='func-vinculador-new',planName='plan-vinculador-new',storageAccountName='stvinculadornew',businessStorageAccountName='stvinculadordocs',cosmosAccountName='cosmos-vinculador-new',openAiAccountName='oai-vinculador-new',documentIntelligenceAccountName='di-vinculador-new',dataFactoryName='adf-vinculador-new',vnetAddressPrefixes=['10.181.0.0/24'],subnetPrefixes={'privateEndpoints':'10.181.0.0/27','functionsIntegration':'10.181.0.64/26'},routeTableResourceId=rid('Microsoft.Network/routeTables'),logAnalyticsWorkspaceResourceId=rid('Microsoft.OperationalInsights/workspaces'),privateDnsZoneResourceIds={service:f'/subscriptions/{SID}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/privatelink.{service}.example' for service in ('blob','queue','table','sites','cosmosSql','cognitiveServicesAccount','dataFactory')})
+def foundation():
+    zones={'blob':'privatelink.blob.core.windows.net','queue':'privatelink.queue.core.windows.net','table':'privatelink.table.core.windows.net','sites':'privatelink.azurewebsites.net','cosmosSql':'privatelink.documents.azure.com','cognitiveServicesAccount':'privatelink.cognitiveservices.azure.com','openAi':'privatelink.openai.azure.com','dataFactory':'privatelink.datafactory.azure.net'}
+    zone_ids={service:f'/subscriptions/{SID}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/{name}' for service,name in zones.items()}
+    return dict(tags={'iniciativa':'VINCULADOR','DataClassification':'Interna','OpsDept':'DTI','UserDept':'Área funcional'},functionAppName='func-vinculador-new',planName='plan-vinculador-new',storageAccountName='stvinculadornew',businessStorageAccountName='stvinculadordocs',cosmosAccountName='cosmos-vinculador-new',openAiAccountName='oai-vinculador-new',documentIntelligenceAccountName='di-vinculador-new',dataFactoryName='adf-vinculador-new',vnetAddressPrefixes=['10.181.0.0/24'],subnetPrefixes={'privateEndpoints':'10.181.0.0/27','functionsIntegration':'10.181.0.64/26'},routeTableResourceId=rid('Microsoft.Network/routeTables'),logAnalyticsWorkspaceResourceId=rid('Microsoft.OperationalInsights/workspaces'),privateDnsZoneResourceIds=zone_ids)
 def active():return dict(foundation(),orchestrationVerified=True,processorPrefixes=['10.180.0.0/26'],processorDataPrivateIps=['10.181.0.6','10.181.0.7'],models=[{'name':'approved','model':'approved-model','version':'approved-version','sku':'GlobalStandard','capacity':1}],modelsApproved=True,cosmosPrivateIps=['10.181.0.6'],fileScanningVerified=True,activateFunctionApp=True,inventoryVerified=True,networkVerified=True,defenderVerified=True,siemVerified=True,applicationVerified=True,securityApprovalId='CAF-123',allowedPrincipalIds=[SID],functionPrivateIps=['10.181.0.5'],apiClientPrefixes=['10.178.0.0/24'],monitorPrefixes=['10.179.1.4'],actionGroupResourceId=rid('Microsoft.Insights/actionGroups'))
 class Parameters(unittest.TestCase):
     def test_foundation_and_activation(self):
@@ -96,9 +99,9 @@ class Template(unittest.TestCase):
         self.assertFalse(self.arm['parameters']['hostUsesDurableStorage']['defaultValue'])
         self.assertTrue(self.arm['parameters']['hostUsesBlobTriggers']['defaultValue'])
         self.assertTrue(self.arm['parameters']['processesUntrustedFiles']['defaultValue'])
-    def test_original_capacity_preserved(self):
+    def test_requested_plan_and_storage_capacity(self):
         plan=next(r for r in self.resources if r['type']=='Microsoft.Web/serverfarms')
-        self.assertEqual(plan['sku']['name'],'P1v3');self.assertEqual(plan['sku']['capacity'],1)
+        self.assertEqual(plan['sku']['name'],'P1v4');self.assertEqual(plan['sku']['tier'],'PremiumV4');self.assertEqual(plan['sku']['capacity'],1)
         storage=next(r for r in self.resources if r['type']=='Microsoft.Storage/storageAccounts')
         self.assertEqual(storage['sku']['name'],'Standard_LRS');self.assertFalse(storage['properties']['allowSharedKeyAccess'])
 
