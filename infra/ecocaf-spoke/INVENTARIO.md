@@ -21,7 +21,34 @@ La fuente es `main-3.bicep`, un Bicep exportado de 1.395 líneas. Su huella y el
 
 El historial referencia `Caf-ecocaf-api`, rama `development`, en [Azure DevOps](https://dev.azure.com/CAFrepos/Innovation%20Lab/_git/Caf-ecocaf-api). Es evidencia histórica, no confirmación del repositorio o rama vigentes.
 
-**No aparecen** app settings, cadenas de conexión, código Python, dependencias de paquetes, configuración de autenticación, asignaciones RBAC, bases de datos ni servicios de IA. Su ausencia no demuestra que no se utilicen. La consulta en vivo del 7 de septiembre de 2026 falló con `AADSTS700082` por sesión vencida; no se verificó siquiera el grupo o la suscripción de origen.
+## Evidencia funcional adicional
+
+La guía de despliegue del 28 de junio de 2025 y el documento técnico V2 del 4 de
+abril de 2025 se revisaron como documentación de la aplicación, no como instrucciones
+de Landing Zone ni como autorización de despliegue.
+
+El documento técnico coincide con rutas observadas en la exportación y confirma el
+flujo funcional de ECOCAF: el frontend carga documentos PDF, `uploadDocuments` los
+guarda en Blob Storage, `extract_fields` extrae variables, `Model` realiza el análisis
+con un modelo de Azure OpenAI y `insertProyect` persiste o actualiza proyectos por
+fase en Cosmos DB. También describe consultas para KPI, historial y fases. Esto eleva
+Blob de negocio, Cosmos DB, Azure OpenAI, Document Intelligence y el frontend de
+“dependencias posibles” a “dependencias funcionales documentadas”.
+
+La guía menciona además App Service, Data Factory y Databricks. Sin embargo, mezcla
+nombres de iDataFactory, IFISCAF y Vinculador y propone exportación/importación manual
+genérica. Por ello no demuestra nombres, SKU, redes, pipelines, notebooks ni contratos
+de datos propios de ECOCAF y no se copiará literalmente al Bicep.
+
+La documentación técnica muestra acceso histórico a Cosmos mediante endpoint y clave.
+El destino CAF debe migrarlo a identidad administrada y RBAC de datos, o registrar una
+excepción explícita; no se incorporarán claves al repositorio ni a parámetros normales.
+
+**No aparecen en la exportación** app settings, cadenas de conexión, código Python,
+dependencias de paquetes, configuración de autenticación, asignaciones RBAC ni los
+recursos funcionales externos documentados. La consulta en vivo del 7 de septiembre
+de 2026 falló con `AADSTS700082` por sesión vencida; no se verificó siquiera el grupo
+o la suscripción de origen.
 
 ## Errores de exportación
 
@@ -56,4 +83,7 @@ Completar con estas revisiones:
 2. Revisar `function_app.py`, `requirements.txt`, `host.json` y el pipeline vigente: clientes de SDK, llamadas HTTP, SQL/Cosmos/Storage, recursos con nombres fijos y credenciales. Los nombres de rutas como `Model`, `kpis` o `documents` no identifican el proveedor usado.
 3. Revisar slots, diagnósticos, RBAC heredado, Application Insights y dependencias observadas en ejecución. Revisar por separado los siete tipos omitidos y configuración de dominios/certificados.
 4. Confirmar frontend y consumidores, autenticación actual, datos a migrar, capacidad P1v3 disponible en la suscripción destino y política de publicación desde la red privada.
-
+5. Recuperar el contrato real de Blob, Cosmos, OpenAI y Document Intelligence:
+   cuentas, grupos, base de datos, contenedor, clave de partición, contenedores Blob,
+   modelos/versiones, identidades y roles. Confirmar si ADF y Databricks pertenecen a
+   ECOCAF o son referencias mezcladas de otras soluciones antes de crearlos.

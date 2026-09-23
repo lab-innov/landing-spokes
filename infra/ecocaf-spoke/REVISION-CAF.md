@@ -10,8 +10,9 @@ no acreditan el estado actual de CAF ni autorizan cambios corporativos.
 
 | Tema | Hallazgo | Cambio o decisión |
 | --- | --- | --- |
-| Inventario | Exportación parcial: Function/host Storage; faltan código, configuración y dependencias | Se conserva inventario limitado y se exige `inventoryVerified` antes de activar |
-| IA compartida | Plan/DDA describen ECOCAF como procesamiento documental con IA | No demuestra qué recursos utiliza la aplicación real. Confirmar Document Intelligence/OpenAI y contrato del hub; no crearlos por inferencia |
+| Inventario | Exportación parcial: Function/host Storage; la documentación funcional confirma frontend, Blob de negocio, Cosmos, OpenAI y Document Intelligence | Se conserva una fundación limitada y se exige completar contratos reales antes de ampliar o activar |
+| IA y datos | El documento técnico confirma OCR, análisis con modelo y persistencia por fases | Confirmar cuentas, modelos, contenedores, partición, identidad y migración; no copiar claves históricas |
+| ADF/Databricks | La guía los menciona usando nombres de Vinculador/iDataFactory | Tratar como pendiente de atribución a ECOCAF; no crear por una referencia mezclada |
 | Topología | Plan propone VNet compartida, admite VNet por iniciativa; esta variante ya tiene VNet propia | Se conserva la migración paralela con dos subredes. Confirmar destino/IPAM con CAF; no se impone /24 |
 | Rutas | Bicep creaba tabla local a partir de IP del firewall | Se sustituye `firewallPrivateIp` por `routeTableResourceId` existente. CAF conserva control de rutas |
 | NSG | Reglas predeterminadas permitían más tráfico que la regla HTTPS visible | Se permite solo tráfico definido para integración y endpoints, con denegación final |
