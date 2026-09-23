@@ -14,7 +14,9 @@ def rid(kind):
     return f'/subscriptions/{SID}/resourceGroups/caf/providers/{kind}/corporativo'
 
 def foundation():
-    return dict(location='eastus', workload='agent', tags={'iniciativa':'pruebas','DataClassification':'Interna','OpsDept':'DTI','UserDept':'GPFEI'}, vnetPrefix='10.123.4.0/24', cafClientPrefixes=['10.121.0.0/24'], privateDnsZoneResourceIds={k:rid('Microsoft.Network/privateDnsZones') for k in ('account','blob','vault','registry','Sql','searchService')}, logAnalyticsWorkspaceId=rid('Microsoft.OperationalInsights/workspaces'), actionGroupId=rid('Microsoft.Insights/actionGroups'), routeTableIds={k:rid('Microsoft.Network/routeTables') for k in ('foundry','containers','appGateway')})
+    zones={'cognitiveServicesAccount':'privatelink.cognitiveservices.azure.com','openAi':'privatelink.openai.azure.com','aiServices':'privatelink.services.ai.azure.com','blob':'privatelink.blob.core.windows.net','vault':'privatelink.vaultcore.azure.net','registry':'privatelink.azurecr.io','cosmosSql':'privatelink.documents.azure.com','searchService':'privatelink.search.windows.net'}
+    zone_ids={key:f'/subscriptions/{SID}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/{name}' for key,name in zones.items()}
+    return dict(location='eastus', workload='agent', tags={'iniciativa':'pruebas','DataClassification':'Interna','OpsDept':'DTI','UserDept':'GPFEI'}, vnetPrefix='10.123.4.0/24', cafClientPrefixes=['10.121.0.0/24'], privateDnsZoneResourceIds=zone_ids, logAnalyticsWorkspaceId=rid('Microsoft.OperationalInsights/workspaces'), actionGroupId=rid('Microsoft.Insights/actionGroups'), routeTableIds={k:rid('Microsoft.Network/routeTables') for k in ('foundry','containers','appGateway')})
 
 def complete():
     return dict(foundation(), modelsApproved=True, securityApprovalId='CAF-PRUEBA', networkReady=True, defenderCoverageVerified=True, siemDeliveryVerified=True, uploadGateVerified=True, monitorPrefixes=['10.120.1.4/32'], privateServiceAddresses={'vault':['10.123.4.198'], 'cosmos':['10.123.4.202','10.123.4.203']}, activateAgentRuntime=True, deployApplications=True, applicationAuthVerified=True, monitoringReady=True, deployGateway=True, gatewayReady=True, gatewayPrivateIp='10.123.4.254', gatewayHostname='agentes.caf.com', frontendImage='caf.azurecr.io/frontend@sha256:'+'a'*64, backendImage='caf.azurecr.io/backend@sha256:'+'b'*64, models=[dict(name='autorizado', model='modelo-autorizado', version='version-autorizada', sku='Standard', capacity=10)])
@@ -53,6 +55,7 @@ class Parameters(unittest.TestCase):
         for key, value in [('monitorPrefixes', []), ('privateServiceAddresses', {}), ('backendSecretNames', ['APPGATEWAY-TLS']), ('siemEventHubName', 'alone'), ('extraEgress', {'foundry':[{'destination':'0.0.0.0/0','ports':['*'],'justification':''}]})]:
             with self.subTest(key=key): self.assertTrue(checker.check(dict(complete(), **{key:value})))
         self.assertEqual(checker.check(dict(complete(), extraEgress={'containers':[{'destination':'10.122.0.5/32','ports':['443'],'justification':'API aprobada'}]})), [])
+        self.assertTrue(checker.check(dict(foundation(), privateDnsZoneResourceIds={'account':rid('Microsoft.Network/privateDnsZones')})))
 
 class Template(unittest.TestCase):
     @classmethod

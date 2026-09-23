@@ -20,11 +20,13 @@
     },
     "privateDnsZoneResourceIds": {
       "value": {
-        "account": "REEMPLAZAR_ID_ZONA_COGNITIVE_SERVICES",
+        "cognitiveServicesAccount": "REEMPLAZAR_ID_ZONA_COGNITIVE_SERVICES",
+        "openAi": "REEMPLAZAR_ID_ZONA_OPENAI",
+        "aiServices": "REEMPLAZAR_ID_ZONA_SERVICES_AI",
         "blob": "REEMPLAZAR_ID_ZONA_BLOB",
         "vault": "REEMPLAZAR_ID_ZONA_KEY_VAULT",
         "registry": "REEMPLAZAR_ID_ZONA_ACR",
-        "Sql": "REEMPLAZAR_ID_ZONA_COSMOS_SQL",
+        "cosmosSql": "REEMPLAZAR_ID_ZONA_COSMOS_SQL",
         "searchService": "REEMPLAZAR_ID_ZONA_SEARCH"
       }
     },

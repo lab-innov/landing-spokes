@@ -4,7 +4,8 @@ param name string
 param subnetId string
 param targetId string
 param groupId string
-param privateDnsZoneResourceId string
+@minLength(1)
+param privateDnsZoneResourceIds string[]
 resource endpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: name
   location: location
@@ -23,6 +24,9 @@ resource dnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2
   name: 'default'
   parent: endpoint
   properties: {
-    privateDnsZoneConfigs: [{ name: 'zone', properties: { privateDnsZoneId: privateDnsZoneResourceId } }]
+    privateDnsZoneConfigs: [for (zoneId, index) in privateDnsZoneResourceIds: {
+      name: 'zone-${index}'
+      properties: { privateDnsZoneId: zoneId }
+    }]
   }
 }

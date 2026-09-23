@@ -55,7 +55,12 @@ def check(p):
                 errors.append(f'{key}: dirección inválida.')
     for key, kind in [('logAnalyticsWorkspaceId', 'Microsoft.OperationalInsights/workspaces'), ('actionGroupId', 'Microsoft.Insights/actionGroups')]:
         require(bool(resource_id(p.get(key), kind)), f'{key}: ID completo requerido.')
-    require(set(p.get('privateDnsZoneResourceIds',{}))=={'account','blob','vault','registry','Sql','searchService'},'Definir todas las zonas DNS privadas de Foundry.')
+    zones=p.get('privateDnsZoneResourceIds',{})
+    expected_zones={'cognitiveServicesAccount':'privatelink.cognitiveservices.azure.com','openAi':'privatelink.openai.azure.com','aiServices':'privatelink.services.ai.azure.com','blob':'privatelink.blob.core.windows.net','vault':'privatelink.vaultcore.azure.net','registry':'privatelink.azurecr.io','cosmosSql':'privatelink.documents.azure.com','searchService':'privatelink.search.windows.net'}
+    require(set(zones)==set(expected_zones),'Definir todas las zonas DNS privadas de Foundry.')
+    for service,zone_id in zones.items():
+        require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/[^/]+',zone_id,re.I)),f'Zona DNS de {service}: usar ID completo en RG-PRIVATEDNS-PR.')
+        require(zone_id.lower().endswith('/'+expected_zones.get(service,'').lower()),f'Zona DNS de {service}: nombre privado incorrecto.')
     for purpose in ('foundry', 'containers', 'appGateway'):
         require(bool(resource_id(p.get('routeTableIds', {}).get(purpose), 'Microsoft.Network/routeTables')), f'routeTableIds.{purpose}: ID completo requerido.')
     for flag in ('networkReady', 'monitoringReady', 'applicationAuthVerified', 'gatewayReady', 'activateAgentRuntime', 'deployApplications', 'deployGateway'):

@@ -174,6 +174,15 @@ module services './modules/services.bicep' = {
     siemEventHubName: siemEventHubName
   }
 }
+var endpointZoneKeys = [
+  ['cognitiveServicesAccount', 'openAi', 'aiServices']
+  ['blob']
+  ['vault']
+  ['registry']
+  ['blob']
+  ['cosmosSql']
+  ['searchService']
+]
 @batchSize(1)
 module endpoints './modules/private-endpoint.bicep' = [
   for i in range(0, 7): {
@@ -185,7 +194,7 @@ module endpoints './modules/private-endpoint.bicep' = [
       subnetId: network.outputs.peSubnetId
       targetId: services.outputs.targets[i].id
       groupId: services.outputs.targets[i].group
-      privateDnsZoneResourceId: privateDnsZoneResourceIds[services.outputs.targets[i].group]
+      privateDnsZoneResourceIds: [for zoneKey in endpointZoneKeys[i]: privateDnsZoneResourceIds[zoneKey]]
     }
   }
 ]
