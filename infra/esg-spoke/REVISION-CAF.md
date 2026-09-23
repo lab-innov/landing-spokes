@@ -25,6 +25,7 @@ su inventario automáticamente.
 | Red | Plan admite VNet compartida o por iniciativa; ESG usa cinco subredes | Se conserva VNet propia y CIDR de IPAM. No se reduce a /24 |
 | Centralización | Plan propone Databricks/ADF/IA compartidos; DDA describe otras fronteras de iniciativa | Se conserva inventario ESG por el acuerdo existente. Confirmar si debe consumir servicios centrales antes de producción |
 | APIM | Plan: productos a nivel de servicio; DDA: ws-ai/gw-ai con contingencia | Reutilizar APIM corporativo sigue pendiente. No se crea gateway ni se elige una variante sin contrato de plataforma |
+| DNS de IA | Foundry, Azure OpenAI y Document Intelligence comparten `groupId=account`, pero no el mismo conjunto de nombres | Foundry asocia `cognitiveservices`, `openai` y `services.ai`; OpenAI asocia `openai`; Document Intelligence asocia `cognitiveservices` |
 | DNS/VPN | Hub y resolución privada corporativos | Se añade DNS explícito a VNet y parámetro para tránsito del gateway remoto; plataforma completa el lado hub |
 | NSG | Una regla de endpoints permitía todo desde VirtualNetwork; otras subredes tenían reglas vacías | Se limita origen/destino/puerto en Foundry, Functions y endpoints, con denegación final |
 | Databricks | Reglas insertadas por delegación y requiredNsgRules=AllRules | Se preservan reglas del servicio. No se afirma deny-all completo en esas dos subredes; revisar reglas efectivas y segmentación con plataforma |

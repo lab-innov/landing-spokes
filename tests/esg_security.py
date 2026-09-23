@@ -14,7 +14,9 @@ params=load('check-esg-parameters');security=load('check-esg-security');acceptan
 SID='11111111-1111-1111-1111-111111111111'
 def rid(kind):return f'/subscriptions/{SID}/resourceGroups/caf/providers/{kind}/central'
 def foundation():
-    return dict(resourceGroupName='rg-esg-new',tags={'iniciativa':'ESG','DataClassification':'Interna','OpsDept':'DTI','UserDept':'GPFEI'},vnetAddressPrefixes=['10.180.0.0/21'],subnetPrefixes=dict(privateEndpoints='10.180.0.0/24',foundryAgents='10.180.1.0/24',functionsIntegration='10.180.2.0/26',databricksPublic='10.180.3.0/26',databricksPrivate='10.180.4.0/26'),existingRouteTableResourceId=rid('Microsoft.Network/routeTables'),existingLogAnalyticsWorkspaceResourceId=rid('Microsoft.OperationalInsights/workspaces'),privateDnsZoneResourceIds={key:rid('Microsoft.Network/privateDnsZones') for key in ('blob','queue','table','account','Sql','sites','dataFactory','portal','databricks_ui_api','browser_authentication')})
+    zones={'blob':'privatelink.blob.core.windows.net','queue':'privatelink.queue.core.windows.net','table':'privatelink.table.core.windows.net','cognitiveServicesAccount':'privatelink.cognitiveservices.azure.com','openAi':'privatelink.openai.azure.com','aiServices':'privatelink.services.ai.azure.com','Sql':'privatelink.documents.azure.com','sites':'privatelink.azurewebsites.net','dataFactory':'privatelink.datafactory.azure.net','portal':'privatelink.adf.azure.com','databricks_ui_api':'privatelink.azuredatabricks.net','browser_authentication':'privatelink.azuredatabricks.net'}
+    zone_ids={key:f'/subscriptions/{SID}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/{name}' for key,name in zones.items()}
+    return dict(resourceGroupName='rg-esg-new',tags={'iniciativa':'ESG','DataClassification':'Interna','OpsDept':'DTI','UserDept':'GPFEI'},vnetAddressPrefixes=['10.180.0.0/21'],subnetPrefixes=dict(privateEndpoints='10.180.0.0/24',foundryAgents='10.180.1.0/24',functionsIntegration='10.180.2.0/26',databricksPublic='10.180.3.0/26',databricksPrivate='10.180.4.0/26'),existingRouteTableResourceId=rid('Microsoft.Network/routeTables'),existingLogAnalyticsWorkspaceResourceId=rid('Microsoft.OperationalInsights/workspaces'),privateDnsZoneResourceIds=zone_ids)
 def activated():
     return dict(foundation(),activateWorkload=True,networkVerified=True,defenderVerified=True,siemVerified=True,applicationVerified=True,uploadGateVerified=True,securityApprovalId='CAF-123',actionGroupResourceId=rid('Microsoft.Insights/actionGroups'),functionAllowedPrincipalIds=[SID],functionPrivateIps=['10.180.0.5'],cosmosPrivateIps=['10.180.0.6'],apiClientPrefixes=['10.179.1.0/24'],monitorPrefixes=['10.179.2.4'])
 
@@ -62,6 +64,9 @@ class Template(unittest.TestCase):
             self.assertNotIn(r['type'],forbidden)
             if 'publicNetworkAccess' in r.get('properties',{}):self.assertEqual(r['properties']['publicNetworkAccess'],'Disabled')
         self.assertEqual(len([r for r in self.resources if r['type']=='Microsoft.Network/privateEndpoints/privateDnsZoneGroups']),len([r for r in self.resources if r['type']=='Microsoft.Network/privateEndpoints']))
+        endpoints=json.dumps(self.arm['resources']['privateEndpoints']['properties']['parameters']['endpoints'])
+        for zone in ('cognitiveServicesAccount','openAi','aiServices'):
+            self.assertIn(zone,endpoints)
     def test_storage_data_audit_and_protection(self):
         protections=[r for r in self.resources if r['type']=='Microsoft.Security/defenderForStorageSettings'];self.assertEqual(len(protections),2)
         for r in protections:

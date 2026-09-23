@@ -353,6 +353,11 @@ var privateEndpointSpecs = concat([
     groupIds: [
       'account'
     ]
+    dnsZoneKeys: [
+      'cognitiveServicesAccount'
+      'openAi'
+      'aiServices'
+    ]
   }
   {
     name: 'pe-${names.openAiAccount}'
@@ -360,12 +365,18 @@ var privateEndpointSpecs = concat([
     groupIds: [
       'account'
     ]
+    dnsZoneKeys: [
+      'openAi'
+    ]
   }
   {
     name: 'pe-${names.documentIntelligence}'
     resourceId: documentIntelligence.outputs.resourceId
     groupIds: [
       'account'
+    ]
+    dnsZoneKeys: [
+      'cognitiveServicesAccount'
     ]
   }
   {

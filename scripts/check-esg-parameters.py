@@ -62,7 +62,11 @@ def check(p):
     for key, kind in [('existingRouteTableResourceId','Microsoft.Network/routeTables'), ('existingLogAnalyticsWorkspaceResourceId','Microsoft.OperationalInsights/workspaces')]:
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/'+re.escape(kind)+r'/[^/]+', p.get(key,''))), f'{key}: ID completo requerido.')
     zones=p.get('privateDnsZoneResourceIds',{})
-    require({'blob','queue','table','account','Sql','sites','dataFactory','portal','databricks_ui_api','browser_authentication'}==set(zones),'Definir todas las zonas DNS privadas ESG.')
+    expected_zones={'blob':'privatelink.blob.core.windows.net','queue':'privatelink.queue.core.windows.net','table':'privatelink.table.core.windows.net','cognitiveServicesAccount':'privatelink.cognitiveservices.azure.com','openAi':'privatelink.openai.azure.com','aiServices':'privatelink.services.ai.azure.com','Sql':'privatelink.documents.azure.com','sites':'privatelink.azurewebsites.net','dataFactory':'privatelink.datafactory.azure.net','portal':'privatelink.adf.azure.com','databricks_ui_api':'privatelink.azuredatabricks.net','browser_authentication':'privatelink.azuredatabricks.net'}
+    require(set(expected_zones)==set(zones),'Definir todas las zonas DNS privadas ESG.')
+    for service,zone_id in zones.items():
+        require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/[^/]+',zone_id,re.I)),f'Zona DNS de {service}: usar ID completo en RG-PRIVATEDNS-PR.')
+        require(zone_id.lower().endswith('/'+expected_zones.get(service,'').lower()),f'Zona DNS de {service}: nombre privado incorrecto.')
     if p.get('actionGroupResourceId'):
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft.Insights/actionGroups/[^/]+',p['actionGroupResourceId'])), 'ID de Action Group inválido.')
     require(bool(p.get('siemAuthorizationRuleId'))==bool(p.get('siemEventHubName')),'SIEM: ID y nombre deben proporcionarse juntos.')
