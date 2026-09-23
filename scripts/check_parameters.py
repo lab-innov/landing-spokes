@@ -13,14 +13,19 @@ def check(p):
     def require(ok,message):
         if not ok: errors.append(message)
     # Nunca devolver los valores del objeto secure applicationSettings.
-    public={k:v for k,v in p.items() if k not in ('applicationSettings','applicationInsightsConnectionString')}
+    public={k:v for k,v in p.items() if k != 'applicationSettings'}
     require(not re.search(r'PENDIENTE|REPLACE|REEMPLAZAR|00000000-0000-0000-0000-000000000000',json.dumps(public),re.I),'Completar marcadores corporativos.')
-    for key in ('iniciativa','DataClassification'): require(bool(p.get('tags',{}).get(key)),f'Etiqueta {key} requerida.')
+    for key in ('iniciativa','DataClassification','OpsDept','UserDept'): require(bool(p.get('tags',{}).get(key)),f'Etiqueta {key} requerida.')
+    require(p.get('tags',{}).get('OpsDept')=='DTI','Etiqueta OpsDept debe ser DTI.')
     for key,old in [('functionAppName','azfunc-premop-cr'),('planName','appsp-pocpremop-cr'),('storageAccountName','asafunctpremopcr'),('businessStorageAccountName','aspremop'),('cosmosAccountName','cdb-premop-cr'),('openAiAccountName','oai-mop-express-cr'),('documentIntelligenceAccountName','di-premop-cr')]:
         require(bool(p.get(key)) and p[key].lower()!=old,f'{key}: usar nombre nuevo para migración paralela.')
     require(bool(re.fullmatch(r'[a-z0-9]{3,24}',p.get('storageAccountName',''))),'Nombre Storage inválido.')
-    for key,kind in [('hubVnetResourceId','Microsoft.Network/virtualNetworks'),('routeTableResourceId','Microsoft.Network/routeTables'),('logAnalyticsWorkspaceResourceId','Microsoft.OperationalInsights/workspaces')]:
+    for key,kind in [('routeTableResourceId','Microsoft.Network/routeTables'),('logAnalyticsWorkspaceResourceId','Microsoft.OperationalInsights/workspaces')]:
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/'+re.escape(kind)+r'/[^/]+',p.get(key,''))),f'{key}: ID completo requerido.')
+    zones=p.get('privateDnsZoneResourceIds',{})
+    require(set(zones)=={'blob','queue','table','sites','cosmosSql','cognitiveServicesAccount'},'Definir todas las zonas DNS privadas de MOP.')
+    for service,zone_id in zones.items():
+        require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/[^/]+',zone_id,re.I)),f'Zona DNS de {service}: usar ID completo en RG-PRIVATEDNS-PR.')
     if p.get('actionGroupResourceId'):
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft.Insights/actionGroups/[^/]+',p['actionGroupResourceId'])),'Action Group: ID inválido.')
     require(bool(p.get('siemAuthorizationRuleId'))==bool(p.get('siemEventHubName')),'SIEM: proporcionar ID y nombre juntos.')
@@ -37,18 +42,17 @@ def check(p):
             require(n.prefixlen<=(27 if k=='privateEndpoints' else 26),f'{k}: espacio insuficiente para esta base.')
         require(not nets['privateEndpoints'].overlaps(nets['functionsIntegration']),'Subredes solapadas.')
     except (ValueError,KeyError,TypeError): errors.append('CIDR inválido.')
-    for key in ('dnsServers','apiClientPrefixes','operatorPrefixes','monitorPrefixes','functionPrivateIps','cosmosPrivateIps'):
+    for key in ('apiClientPrefixes','operatorPrefixes','monitorPrefixes','functionPrivateIps','cosmosPrivateIps'):
         values=p.get(key,[])
-        if key=='dnsServers': require(bool(values),'DNS corporativo requerido.')
         for value in values:
             try:
                 n=ipaddress.IPv4Network(value,strict=True)
                 require(any(n.subnet_of(v) for v in PRIVATE),f'{key}: red privada requerida.')
-                if key in ('dnsServers','functionPrivateIps','cosmosPrivateIps'):require(n.prefixlen==32 and '/' not in value,f'{key}: IP individual sin máscara requerida.')
+                if key in ('functionPrivateIps','cosmosPrivateIps'):require(n.prefixlen==32 and '/' not in value,f'{key}: IP individual sin máscara requerida.')
                 if key in ('functionPrivateIps','cosmosPrivateIps') and 'privateEndpoints' in nets:
                     pe=nets['privateEndpoints'];require(n.subnet_of(pe) and int(n.network_address)-int(pe.network_address)>=4 and n.network_address!=pe.broadcast_address,'IP Function fuera de endpoints o reservada.')
             except (ValueError,TypeError):errors.append(f'{key}: IP/CIDR inválido.')
-    for flag in ('activateFunctionApp','inventoryVerified','networkVerified','defenderVerified','siemVerified','applicationVerified','processesUntrustedFiles','fileScanningVerified','hostUsesTables','hostUsesBlobTriggers','hostUsesDurableStorage','useRemoteGateways'):
+    for flag in ('activateFunctionApp','inventoryVerified','networkVerified','defenderVerified','siemVerified','applicationVerified','processesUntrustedFiles','fileScanningVerified','hostUsesTables','hostUsesBlobTriggers','hostUsesDurableStorage'):
         require(type(p.get(flag,False)) is bool,f'{flag}: booleano requerido.')
     if p.get('activateFunctionApp'):
         for flag in ('inventoryVerified','networkVerified','defenderVerified','siemVerified','applicationVerified'):

@@ -21,7 +21,7 @@ El contrato APIM y la distribución de suscripciones/workspaces que difieren ent
 | OpenAI | S0 privado, autenticación local deshabilitada, identidad; modelos explícitos | Conserva uso Batch y controla su autorización sin asignar Contributor general |
 | Document Intelligence | FormRecognizer S0 privado y Entra | Conserva extracción documental; validar método de envío y SDK con red privada |
 | App Insights | Componente de carga nuevo, LAW existente, ingestión/consulta públicas deshabilitadas | El inventario no contiene observabilidad equivalente; requiere AMPLS corporativo |
-| Red | Una VNet `/24`, dos NSG y subredes, peering spoke → hub, rutas y DNS corporativos existentes | Reutiliza VPN y controles CAF; no duplica firewall, VPN Gateway, Bastion o resolver |
+| Red | Una VNet `/24`, dos NSG y subredes, rutas existentes y DNS de Azure | Producción no crea peering; plataforma completa la conexión Virtual WAN |
 
 RA-GRS no asegura conmutación transparente: la réplica secundaria es de lectura y la replicación geográfica es asíncrona. Esta entrega crea endpoint privado de Blob primario; no habilita lectura directa del secundario ni ensaya failover. Confirmar región secundaria/residencia de datos y diseñar conectividad/DNS para recuperación. B2 de una instancia, host LRS y Cosmos sin zonas tampoco constituyen HA zonal. Definir RTO/RPO y probar restauración antes de aceptar producción.
 
@@ -31,9 +31,9 @@ Distribución ilustrativa para `A.B.C.0/24`: `A.B.C.0/27` para endpoints, `A.B.C
 
 Ocho endpoints: host Blob/Queue/Table, documentos Blob, Function sites, Cosmos Sql, OpenAI account y Document Intelligence account. Cosmos puede consumir varias IP. Se obtienen las IP aprobadas de Function/Cosmos tras la fundación, sin inventarlas; esas listas son necesarias para activar la Function.
 
-DINE debe cubrir `privatelink.blob.core.windows.net`, `privatelink.queue.core.windows.net`, `privatelink.table.core.windows.net`, `privatelink.azurewebsites.net` (incluido SCM), `privatelink.documents.azure.com`, `privatelink.openai.azure.com` y `privatelink.cognitiveservices.azure.com`. AMPLS tiene sus zonas y asociaciones corporativas. La plantilla no crea zonas, enlaces ni grupos DNS. El peering por sí solo no configura resolución.
+Deben suministrarse los IDs de las zonas centralizadas en `RG-PRIVATEDNS-PR` para Blob, Queue, Table, Azure Websites (incluido SCM), Cosmos SQL y Cognitive Services. La plantilla no crea zonas; cada endpoint crea su grupo DNS contra esos IDs.
 
-Plataforma completa el peering inverso, retorno VPN, DNS y compatibilidad de las rutas existentes con los endpoints. Activar `useRemoteGateways` solo después de habilitar el hub. Probar resolución y acceso desde la integración Functions, ejecutor SCM privado y clientes VPN.
+Plataforma completa la conexión Virtual WAN, retorno VPN y compatibilidad de las rutas existentes con los endpoints. Probar resolución y acceso desde la integración Functions, ejecutor SCM privado y clientes VPN. Application Insights se retira; Dynatrace se coordina fuera de esta plantilla.
 
 Los clientes acceden únicamente a la IP privada de la Function por 443. Functions llega a datos privados por 443, DNS y servicios Entra/Monitor. Cosmos Direct permite TCP 0–65535 solo hacia las IP de su endpoint desde la integración; no abre esos puertos a toda la subred. Los operadores reciben administración privada por 443 y deben limitarse a ejecutores corporativos. `extraEgress` necesita IP/CIDR acotado, puertos individuales y justificación; notificaciones o APIs externas no quedan abiertas por defecto.
 
