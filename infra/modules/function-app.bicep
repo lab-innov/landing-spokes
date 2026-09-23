@@ -16,8 +16,6 @@ param authenticationClientId string
 param allowedPrincipalIds array
 param actionGroupResourceId string
 param requestsAlertThreshold int
-@secure()
-param applicationInsightsConnectionString string
 param logAnalyticsWorkspaceResourceId string
 param siemAuthorizationRuleId string
 param siemEventHubName string
@@ -66,7 +64,6 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
         supportCredentials: false
       }
       appSettings: [for setting in items(union(applicationSettings, {
-        APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsightsConnectionString
         AzureWebJobsStorage__accountName: hostStorageAccountName
         AzureWebJobsStorage__credential: 'managedidentity'
         BLOB_STORAGE_CONNECTION_STRING__blobServiceUri: 'https://${businessStorageAccountName}.blob.${environment().suffixes.storage}'

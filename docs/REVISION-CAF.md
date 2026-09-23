@@ -23,7 +23,7 @@ Los documentos describen organización APIM y límites de suscripción que plata
 | Document Intelligence | FormRecognizer S0, privado, Entra | Preserva análisis documental; exige comprobar SDK y método de envío de archivos |
 | Data Factory | Identidad administrada, acceso público deshabilitado, IR en managed VNet | Orquesta Databricks mediante un managed private endpoint que se crea en la etapa ADF |
 | App Insights | Nuevo componente de carga sobre LAW existente, ingestión/consulta públicas deshabilitadas | Centraliza observabilidad; requiere AMPLS corporativo |
-| VNet | Un `/24`, dos subredes, dos NSG, rutas existentes, peering al hub | Respeta IPAM y conectividad por VPN, sin duplicar servicios centrales |
+| VNet | Un `/24`, dos subredes, dos NSG, rutas existentes y DNS de Azure | Producción no crea peering; plataforma completa la conexión Virtual WAN |
 
 B1 no se utiliza: Vinculador tiene P1v3 en el inventario. Tampoco se atribuye HA zonal: una instancia, LRS y Cosmos de una región requieren aprobación de RTO/RPO, carga y restauración. Los modelos Global requieren aprobación de residencia y tratamiento de información. Copias y retenciones nuevas se aplican a recursos nuevos; no representan una migración ya ejecutada.
 
@@ -35,7 +35,7 @@ Se crean diez endpoints del spoke: tres para host, dos para documentos, uno Func
 
 DNS/DINE corporativo debe cubrir `privatelink.blob.core.windows.net`, `privatelink.queue.core.windows.net`, `privatelink.table.core.windows.net`, `privatelink.azurewebsites.net` (incluido SCM), `privatelink.documents.azure.com`, `privatelink.openai.azure.com`, `privatelink.cognitiveservices.azure.com` y `privatelink.datafactory.azure.net`. Confirmar además DNS/AMPLS y el acceso al portal ADF desde los equipos corporativos; no se crea endpoint `portal`. No se crean zonas, enlaces o zone groups DNS locales.
 
-Plataforma completa el peering inverso, tránsito de gateway si se solicita, DNS, rutas efectivas y retorno VPN. La tabla de rutas existente debe ser compatible con la asociación y no desviar los endpoints indebidamente. `useRemoteGateways` se habilita después del lado hub.
+Plataforma completa la conexión Virtual WAN, rutas efectivas y retorno VPN. Cada endpoint se asocia a una zona centralizada en `RG-PRIVATEDNS-PR`; no se crean zonas. La tabla de rutas existente debe ser compatible y no desviar endpoints. No se crea Application Insights; Dynatrace se coordina fuera de esta plantilla.
 
 Clientes solo acceden a la Function por 443. Integración Functions accede a datos por 443, DNS, Entra/Monitor y Cosmos Direct mediante sus IP reales. Las redes de cómputo Databricks se declaran en `processorPrefixes`: solo acceden a las IP de datos confirmadas en `processorDataPrivateIps`, nunca al host o a la Function. No confundir estas redes de cómputo con el managed private endpoint de ADF, que solo conecta al API Databricks. La conectividad entre cómputo externo y datos privados debe verificarse aparte.
 
