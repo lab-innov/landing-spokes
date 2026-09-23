@@ -304,12 +304,18 @@ var privateEndpointSpecs = [
     groupIds: [
       'account'
     ]
+    dnsZoneKeys: [
+      'openAi'
+    ]
   }
   {
     name: 'pe-${names.documentIntelligence}'
     resourceId: documentIntelligence.outputs.resourceId
     groupIds: [
       'account'
+    ]
+    dnsZoneKeys: [
+      'cognitiveServicesAccount'
     ]
   }
   {

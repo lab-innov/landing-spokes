@@ -31,10 +31,10 @@ resource dnsZoneGroups 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@
   name: 'default'
   parent: privateEndpoints[index]
   properties: {
-    privateDnsZoneConfigs: [{
-      name: 'zone'
+    privateDnsZoneConfigs: [for (zoneKey, zoneIndex) in (endpoint.?dnsZoneKeys ?? endpoint.groupIds): {
+      name: 'zone-${zoneIndex}'
       properties: {
-        privateDnsZoneId: privateDnsZoneResourceIds[endpoint.groupIds[0]]
+        privateDnsZoneId: privateDnsZoneResourceIds[zoneKey]
       }
     }]
   }

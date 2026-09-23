@@ -14,7 +14,7 @@ Se conserva `RG-POC-IFIS-CR` para revertir la migración.
 - Cosmos NoSQL `IfisCAF/Reportes`, partición `/id`, 400 RU/s, East US/West US,
   consistencia Session y free tier deshabilitado. La réplica no constituye un
   plan de recuperación regional de toda la aplicación.
-- Function App Linux P1v3, Python 3.13, identidad administrada, Entra, entrada
+- Function App Linux P1v4, Python 3.13, identidad administrada, Entra, entrada
   privada y salida integrada en la VNet.
 - Databricks Premium, nodos sin IP pública, access connector y endpoints privados
   de API/autenticación web. `AllRules` requiere salida corporativa aprobada para

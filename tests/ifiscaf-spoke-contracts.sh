@@ -20,8 +20,8 @@ if rg -n --glob '*.bicep' "resource .*Microsoft\.Network/privateDnsZones@" "${TA
   exit 1
 fi
 rg -q "privateEndpoints/privateDnsZoneGroups" "${TARGET_DIR}/modules/private-endpoints.bicep"
-if rg -n --glob '*.bicep' "virtualNetworkPeerings|Microsoft\.Insights/components" "${TARGET_DIR}"; then
-  echo "Production spoke must not create peerings or Application Insights." >&2
+if rg -n --glob '*.bicep' "virtualNetworkPeerings|Microsoft\.Insights/components|Microsoft\.Network/publicIPAddresses" "${TARGET_DIR}"; then
+  echo "Production spoke must not create peerings, Application Insights, or public IPs." >&2
   exit 1
 fi
 
@@ -50,6 +50,10 @@ rg -q "privateEndpointNetworkPolicies: 'Enabled'" "${TARGET_DIR}/modules/network
 rg -q "Microsoft.Databricks/workspaces" "${TARGET_DIR}/modules/network.bicep"
 rg -q "enableNoPublicIp" "${TARGET_DIR}/modules/databricks.bicep"
 rg -q "AzureWebJobsStorage__accountName" "${TARGET_DIR}/modules/function-app.bicep"
+rg -q "name: 'P1v4'" "${TARGET_DIR}/modules/function-app.bicep"
+rg -q "tier: 'PremiumV4'" "${TARGET_DIR}/modules/function-app.bicep"
+rg -q "'openAi'" "${TARGET_DIR}/main.bicep"
+rg -q "'cognitiveServicesAccount'" "${TARGET_DIR}/main.bicep"
 rg -q "enableFreeTier: false" "${TARGET_DIR}/modules/cosmos-db.bicep"
 rg -q "containerThroughput: 400" "${TARGET_DIR}/main.bicep"
 rg -q "'/id'" "${TARGET_DIR}/modules/cosmos-db.bicep"

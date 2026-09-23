@@ -20,6 +20,12 @@ require(values['resourceGroupName'].lower() != 'rg-poc-ifis-cr', 'El grupo origi
 require(re.fullmatch('[a-z][a-z0-9-]{1,11}', values['namePrefix']), 'namePrefix debe usar letras minúsculas, números y guiones.')
 for key in ('hubVnetResourceId', 'existingRouteTableResourceId', 'existingLogAnalyticsWorkspaceResourceId', 'sharedSyntheticStorageAccountResourceId'):
     require(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/[^/]+/[^/]+/[^/]+', values[key]), f'ID inválido: {key}')
+zones = values['privateDnsZoneResourceIds']
+expected_zones = {'blob':'privatelink.blob.core.windows.net','dfs':'privatelink.dfs.core.windows.net','queue':'privatelink.queue.core.windows.net','table':'privatelink.table.core.windows.net','cognitiveServicesAccount':'privatelink.cognitiveservices.azure.com','openAi':'privatelink.openai.azure.com','Sql':'privatelink.documents.azure.com','sites':'privatelink.azurewebsites.net','dataFactory':'privatelink.datafactory.azure.net','portal':'privatelink.adf.azure.com','databricks_ui_api':'privatelink.azuredatabricks.net','browser_authentication':'privatelink.azuredatabricks.net'}
+require(set(zones) == set(expected_zones), 'Definir todas las zonas DNS privadas de IFISCAF.')
+for service, zone_id in zones.items():
+    require(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/[^/]+', zone_id, re.I), f'ID de zona DNS inválido: {service}')
+    require(zone_id.lower().endswith('/' + expected_zones[service].lower()), f'Nombre de zona DNS incorrecto: {service}')
 try:
     vnets = [ipaddress.IPv4Network(x) for x in values['vnetAddressPrefixes']]
     subnets = {k: ipaddress.IPv4Network(v) for k, v in values['subnetPrefixes'].items()}
