@@ -5,6 +5,12 @@ param tags object = {}
 param planName string
 param functionAppName string
 param hostStorageAccountName string
+param businessStorageAccountName string
+param cosmosAccountName string
+param openAiAccountName string
+param documentIntelligenceAccountName string
+param openAiApiVersion string
+param commonServiceUrls object
 @secure()
 param applicationSettings object = {}
 param allowedOrigins array = []
@@ -65,6 +71,26 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
       appSettings: [for setting in items(union(applicationSettings, {
         AzureWebJobsStorage__accountName: hostStorageAccountName
         AzureWebJobsStorage__credential: 'managedidentity'
+        BLOB_STORAGE_ACCOUNT_NAME: businessStorageAccountName
+        BLOB_STORAGE_ACCOUNT_URL: 'https://${businessStorageAccountName}.blob.${environment().suffixes.storage}'
+        BLOB_STORAGE_CONTAINER_NAME: 'ecocaf'
+        BLOB_SOURCE_CONTAINER_NAME: 'ecocaf'
+        BLOB_TARGET_CONTAINER_NAME: 'ecocaf'
+        COSMOS_DB_URI: 'https://${cosmosAccountName}.documents.azure.com:443/'
+        COSMOS_DB_NAME: 'EcoCAF'
+        COSMOS_DB_CONTAINER_NAME: 'Proyectos'
+        COSMOS_DB_DOCUMENTS_CONTAINER: 'Documents'
+        COSMOS_DB_LOGGING_URI: 'https://${cosmosAccountName}.documents.azure.com:443/'
+        COSMOS_DB_LOGGING_DATABASE: 'Auditoria'
+        COSMOS_DB_LOGGING_CONTAINER: 'Logs'
+        DOCUMENT_INTELLIGENCE_NAME: documentIntelligenceAccountName
+        DOCUMENT_INTELLIGENCE_ENDPOINT: 'https://${documentIntelligenceAccountName}.cognitiveservices.azure.com/'
+        OPEN_AI_NAME: openAiAccountName
+        OPEN_AI_API_URL: 'https://${openAiAccountName}.openai.azure.com/'
+        OPEN_AI_API_VERSION: openAiApiVersion
+        AUDTIS_API_URL_BASE: commonServiceUrls.audits
+        CONVERTER_TO_PDF_API_URL_BASE: commonServiceUrls.pdfConverter
+        NOTIFICATIONS_API_URL_BASE: commonServiceUrls.notifications
         FUNCTIONS_EXTENSION_VERSION: '~4'
         FUNCTIONS_WORKER_RUNTIME: 'python'
       })): {

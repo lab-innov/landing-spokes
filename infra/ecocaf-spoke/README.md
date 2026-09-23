@@ -1,16 +1,23 @@
 # ECOCAF: spoke privado
 
-Base modular para una **migración paralela a un RG nuevo**. Conserva la evidencia
-exportada: Function Linux Python 3.13, plan Dedicated P1v4 de una instancia y
-StorageV2 LRS de host. La Function arranca detenida.
+Base modular para una **migración paralela a un RG nuevo**. Conserva la Function
+Linux Python 3.13, usa plan Dedicated P1v4 de una instancia y mantiene un StorageV2
+LRS exclusivo para el host. La Function y el frontend arrancan detenidos.
 
 Incorpora NSG con permisos explícitos, tabla de rutas corporativa existente,
 DNS privado centralizado y conexión de red a cargo de plataforma; Entra con identidades autorizadas, Defender Storage,
 auditoría Blob/Queue/Table, SIEM opcional y alertas al Action Group corporativo.
-La documentación funcional confirma Blob de negocio, Cosmos DB, Azure OpenAI,
-Document Intelligence y frontend, pero aún faltan sus contratos desplegables. No se
-crean hasta confirmar nombres, datos, modelos, identidad, red y migración. ADF y
-Databricks permanecen pendientes porque la guía mezcla recursos de otras soluciones.
+El spoke incluye recursos dedicados para la aplicación completa: Storage HNS de
+negocio con contenedor `ecocaf`, Cosmos DB serverless, Azure OpenAI, Document
+Intelligence y frontend Node 24 sobre B1. Todos quedan privados, sin autenticación
+por claves y con identidades administradas/RBAC. Los modelos de OpenAI no se crean
+sin aprobación explícita. ADF y Databricks se excluyen: la evidencia revisada los
+mezcla con Vinculador/iDataFactory y no demuestra que ECOCAF los use.
+
+Las APIs comunes de auditoría, notificaciones y conversión PDF permanecen compartidas
+mediante URLs privadas verificadas; esta plantilla no las duplica. Antes de activar
+se exige migrar el código de claves a identidad, migrar datos y confirmar esos
+contratos, la red, Defender, SIEM y autenticación Entra.
 
 ```bash
 ./infra/ecocaf-spoke/validate.sh

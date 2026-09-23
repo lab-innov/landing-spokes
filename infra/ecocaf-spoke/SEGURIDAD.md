@@ -11,12 +11,17 @@ No se crean firewall, VPN Gateway, Bastion, resolvers ni direcciones IP pública
 | Parámetro | Responsable / contenido |
 | --- | --- |
 | `tags.iniciativa`, `tags.DataClassification`, `tags.OpsDept`, `tags.UserDept` | Identidad, clasificación y departamentos; `OpsDept` debe ser `DTI` |
-| `privateDnsZoneResourceIds` | IDs completos de Blob, Queue, Table y Azure Websites en `RG-PRIVATEDNS-PR` |
+| `privateDnsZoneResourceIds` | IDs de Blob, DFS, Queue, Table, Azure Websites, Cosmos Sql, Cognitive Services y Azure OpenAI en `RG-PRIVATEDNS-PR` |
 | `apiClientPrefixes` | Redes VPN/APIM autorizadas para la API |
 | `operatorPrefixes` | Ejecutores/operadores privados autorizados, no toda la VPN |
 | `monitorPrefixes` | IP/CIDR de endpoints AMPLS corporativos |
 | `functionPrivateIps` | IP reales del endpoint sites, descubiertas tras la fundación |
+| `frontendPrivateIps` | IP reales del endpoint sites del frontend |
 | `allowedPrincipalIds` | Object IDs de usuarios o identidades de servicio autorizados (máximo 13), no grupos ni client IDs |
+| `frontendAllowedPrincipalIds` | Object IDs autorizados para el frontend |
+| `models`, `modelsApproved` | Modelo, versión, SKU y capacidad de OpenAI aprobados; vacío por defecto |
+| `commonServiceUrls`, `commonServicesVerified` | URLs privadas verificadas de auditoría, notificaciones y conversión PDF |
+| `identityMigrationVerified` | Evidencia de migración del código desde claves hacia identidad administrada |
 | `extraEgress` | Lista de salidas TCP excepcionales por IP/CIDR, puertos individuales y justificación |
 | `actionGroupResourceId` | Action Group corporativo existente |
 | `siemAuthorizationRuleId`, `siemEventHubName` | Destino Event Hub corporativo; proporcionar ambos o ninguno |
@@ -26,10 +31,11 @@ No se crean firewall, VPN Gateway, Bastion, resolvers ni direcciones IP pública
 ## Red y permisos
 
 Un NSG limita conexiones por origen/destino/puerto. No autentica al usuario ni
-filtra malware. Los dos NSG terminan en denegación explícita antes de los permisos
+filtra malware. Los NSG terminan en denegación explícita antes de los permisos
 predeterminados de Azure:
 
 - Integración Functions a endpoints del spoke por TCP 443.
+- Integración del frontend a endpoints de la Function y servicios por TCP 443.
 - Clientes VPN/APIM a las IP del endpoint Function por TCP 443, sin abrirles los
   endpoints de Storage. El endpoint sites incluye app y SCM: la red no distingue
   ambos nombres; mantener SCM sin autenticación básica y publicar mediante Entra.
@@ -47,11 +53,12 @@ Sin `functionPrivateIps` no existe permiso de entrada para clientes. El script
 pertenecen a la subred de endpoints. Su recreación exige actualizar las reglas.
 No se inventan IP estáticas para el servicio.
 
-La tabla de rutas se asocia a ambas subredes; revisar cómo afectan sus rutas a los
+La tabla de rutas se asocia a las tres subredes; revisar cómo afectan sus rutas a los
 endpoints y a las respuestas. Cada endpoint queda asociado mediante un grupo DNS
 a la zona central suministrada para `privatelink.azurewebsites.net` (app y SCM),
-Blob, Queue y Table. Confirmar resolución privada desde Azure/VPN y el agente de
-publicación; el enlace DNS no prueba conectividad de Virtual WAN.
+Blob, DFS, Queue, Table, Cosmos Sql, OpenAI y Cognitive Services. Confirmar resolución
+privada desde Azure/VPN y el agente de publicación; el enlace DNS no prueba
+conectividad de Virtual WAN.
 
 Entra exige token de la audiencia de la API y object ID autorizado. Probar 401 sin
 token y 403 para identidad no autorizada. Autorización de negocio por documento,
@@ -60,8 +67,10 @@ usuario o rol sigue siendo responsabilidad de la aplicación.
 Blob Data Owner se limita al Storage exclusivo del host. Table Data Contributor
 solo se asigna con `hostUsesTables` o Durable; Queue Contributor con Blob triggers
 o Durable; Storage Account Contributor solo con Blob triggers. No se conceden
-roles sobre datos de negocio desconocidos. Revisar requerimientos reales del host
-antes de activar esas opciones.
+roles genéricos adicionales al host. Para negocio, la identidad de la Function
+recibe Blob Data Contributor limitado al contenedor `ecocaf`, Cosmos Data Contributor
+limitado por separado a `EcoCAF` y `Auditoria`, Cognitive Services OpenAI User y
+Cognitive Services User. El código debe consumir tokens antes de activar.
 
 ## Defender y archivos
 
@@ -76,15 +85,16 @@ python3 infra/ecocaf-spoke/check_security.py --resources /ruta/privada/recursos-
 
 El JSON contiene el valor del output `securityResourceIds`. El script consulta
 solo la suscripción/RG derivados de los IDs, sin secretos, y comprueba planes
-AppServices y CloudPosture, Defender del host y el endpoint Function aprobado.
+AppServices, CloudPosture, AI y CosmosDbs, Defender de ambos Storage y endpoints
+aprobados de Function/frontend.
 Un fallo de lectura no produce un resultado satisfactorio. El informe solo
 acredita configuración de estos recursos, no recepción de alertas ni cobertura
 efectiva de todos los componentes de la aplicación.
 
 Verificar las limitaciones de protección de Functions Linux privadas y de análisis
 serverless sin acceso a Internet. No abrir públicamente la API para permitir un
-scanner. No se habilitan planes AI, Cosmos, Key Vault o Containers hasta confirmar
-recursos que los requieran; el inventario actual no contiene esos recursos.
+scanner. La plantilla no modifica planes Defender de suscripción; esos planes
+siguen bajo control de plataforma y el preflight solo verifica su estado.
 
 Si `processesUntrustedFiles=true`, se exige `fileScanningVerified=true` antes de
 activar: identificar dónde llegan los documentos y comprobar análisis real y
@@ -122,21 +132,22 @@ No introducir secretos o contenido documental en trazas sin política aprobada.
 
 ## Etapas y validación
 
-1. Cerrar [inventario](INVENTARIO.md), clasificación, dependencias, nombres/RG
-   nuevos, IPAM y contrato con plataforma. El código no está en este repositorio.
+1. Cerrar nombres/RG nuevos, IPAM, zonas DNS, modelos/capacidad, URLs de APIs comunes
+   y contrato con plataforma. El código no está en este repositorio.
 2. Compilar y comprobar parámetros. Para un bicepparam real, compilar a un archivo
    temporal privado antes de ejecutar el comprobador; eliminarlo después porque
    puede contener ajustes de aplicación. Nunca guardar esos valores en Git.
 3. Ejecutar validate/what-if con suscripción y RG de destino explícitos. Desplegar
    fundación solo dentro de una ventana autorizada, con `activateFunctionApp=false`.
-4. Confirmar zonas DNS centrales, endpoints, rutas y RBAC; descubrir IP de Function. Recuperar el
-   paquete Python y publicar con Entra desde un ejecutor CAF. Confirmar mecanismos
-   de publicación/contenido compatibles con P1v4; no copiar claves ni leases del host.
+4. Confirmar zonas DNS centrales, endpoints, rutas y RBAC; descubrir IP de Function
+   y frontend. Recuperar los paquetes Python/Node y publicar con Entra desde un
+   ejecutor CAF. Migrar acceso a datos/IA a identidad; no copiar claves ni leases.
 5. Revisar evidencias: `inventoryVerified`, `networkVerified`, `defenderVerified`,
    `siemVerified`, `applicationVerified`, `securityApprovalId` y control de archivos
    cuando aplique. Con allowlist, IP y Action Group completos, activar de forma
    controlada. Pruebas previas del paquete pueden realizarse en ensayo.
-6. En destino probar host, datos, dependencias, 23 rutas HTTP, rechazo público,
+6. Migrar datos de Blob/Cosmos mediante procedimiento aprobado. En destino probar
+   host, datos, dependencias, frontend, 23 rutas HTTP, rechazo público,
    401/403, trazas y alertas antes de cambiar consumidores. La activación no ejecuta
    esas pruebas ni declara producción automáticamente.
 

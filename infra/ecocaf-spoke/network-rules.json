@@ -113,6 +113,92 @@
       }
     }
   ],
+  "frontendIntegration": [
+    {
+      "name": "servicios-privados",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "frontendIntegration",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 200
+      }
+    },
+    {
+      "name": "dns-plataforma",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "*",
+        "sourceAddressPrefix": "frontendIntegration",
+        "destinationAddressPrefix": "AzurePlatformDNS",
+        "destinationPortRanges": [
+          "53"
+        ],
+        "priority": 220
+      }
+    },
+    {
+      "name": "entra",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "frontendIntegration",
+        "destinationAddressPrefix": "AzureActiveDirectory",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 250
+      }
+    },
+    {
+      "name": "monitor-servicio",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "frontendIntegration",
+        "destinationAddressPrefix": "AzureMonitor",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 260
+      }
+    },
+    {
+      "name": "denegar-inbound",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    },
+    {
+      "name": "denegar-outbound",
+      "properties": {
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "sourceAddressPrefix": "*",
+        "destinationAddressPrefix": "*",
+        "destinationPortRanges": [
+          "*"
+        ],
+        "priority": 4096
+      }
+    }
+  ],
   "privateEndpoints": [
     {
       "name": "https-functionsintegration",
@@ -129,6 +215,20 @@
       }
     },
     {
+      "name": "https-frontendintegration",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "frontendIntegration",
+        "destinationAddressPrefix": "privateEndpoints",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 220
+      }
+    },
+    {
       "name": "https-operators",
       "properties": {
         "direction": "Inbound",
@@ -140,6 +240,20 @@
           "443"
         ],
         "priority": 240
+      }
+    },
+    {
+      "name": "web-caf",
+      "properties": {
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "sourceAddressPrefix": "clients",
+        "destinationAddressPrefix": "frontend",
+        "destinationPortRanges": [
+          "443"
+        ],
+        "priority": 320
       }
     },
     {

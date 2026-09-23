@@ -1,7 +1,7 @@
 # Inventario y migración ECOCAF
 
-Evidencia histórica del 7 de septiembre de 2026. No se renovó la consulta Azure
-en esta revisión. La seguridad actual se documenta en [SEGURIDAD.md](SEGURIDAD.md).
+Inventario contrastado con Azure el 23 de septiembre de 2026, la exportación y la
+documentación funcional. La seguridad se documenta en [SEGURIDAD.md](SEGURIDAD.md).
 
 ## Qué sabemos
 
@@ -18,6 +18,26 @@ La fuente es `main-3.bicep`, un Bicep exportado de 1.395 líneas. Su huella y el
 | 23 funciones HTTP | Inventariadas con rutas y métodos; se publican desde el código, no como recursos `sites/functions` |
 | 11 registros `sites/deployments` | Historial, excluido de la infraestructura |
 | Hostname `azurewebsites.net` | Generado por Azure, sin binding exportado del nombre original |
+
+## Estado observado y destino dedicado
+
+El grupo real consultado es `RG-POC-ECOCAF-CR` y contiene únicamente la Function,
+su plan y el Storage del host. La aplicación completa depende hoy de recursos en
+`RG-POC-iDataFactory-CR`; por eso la exportación del grupo ECOCAF no los mostraba.
+
+| Dependencia observada | Destino definido en este spoke |
+| --- | --- |
+| Storage `sapocidatafactorycr`, HNS, contenedor `ecocaf` | Storage HNS dedicado, privado, sin shared keys, con `blob` y `dfs` Private Endpoints |
+| Cosmos `cd-poc-idatafactory-cr` | Cosmos dedicado serverless: `EcoCAF/Documents`, `EcoCAF/Proyectos` y `Auditoria/Logs`, todos con partición `/id` |
+| OpenAI `oai-POC-iDataFactory-CR` | Cuenta Azure OpenAI dedicada; despliegues de modelos vacíos hasta aprobar nombre, versión, SKU y capacidad |
+| Document Intelligence `di-POC-iDataFactory-CR` | Cuenta dedicada privada y sin claves locales |
+| Frontend compartido `app-IdataFactory-CR` | App Service Linux Node 24 dedicado sobre B1, con Entra, VNet Integration y Private Endpoint |
+| APIs de auditoría, notificaciones y conversión PDF | Se mantienen como servicios comunes; requieren URLs privadas y contrato verificados |
+
+La Function recibe por identidad administrada Blob Data Contributor sobre el
+contenedor `ecocaf`, Cosmos Data Contributor sobre las dos bases y roles de usuario
+para OpenAI/Document Intelligence. No se copian claves, cadenas de conexión ni
+despliegues compartidos de modelos. ADF y Databricks no se crean.
 
 El historial referencia `Caf-ecocaf-api`, rama `development`, en [Azure DevOps](https://dev.azure.com/CAFrepos/Innovation%20Lab/_git/Caf-ecocaf-api). Es evidencia histórica, no confirmación del repositorio o rama vigentes.
 
@@ -44,11 +64,10 @@ La documentación técnica muestra acceso histórico a Cosmos mediante endpoint 
 El destino CAF debe migrarlo a identidad administrada y RBAC de datos, o registrar una
 excepción explícita; no se incorporarán claves al repositorio ni a parámetros normales.
 
-**No aparecen en la exportación** app settings, cadenas de conexión, código Python,
-dependencias de paquetes, configuración de autenticación, asignaciones RBAC ni los
-recursos funcionales externos documentados. La consulta en vivo del 7 de septiembre
-de 2026 falló con `AADSTS700082` por sesión vencida; no se verificó siquiera el grupo
-o la suscripción de origen.
+**No aparecen en la exportación** el código Python, dependencias de paquetes ni el
+paquete exacto del frontend. La consulta viva recuperó nombres de ajustes y referencias
+sin imprimir secretos: confirma Storage/Cosmos/IA y las APIs comunes, pero no prueba
+que el código acepte identidad administrada ni que los datos estén migrados.
 
 ## Errores de exportación
 
@@ -66,7 +85,8 @@ o la suscripción de origen.
 
 ## Cerrar el inventario
 
-Después de renovar la sesión con `az login`, ejecutar el recolector de solo lectura, indicando explícitamente la suscripción y el grupo correctos:
+Para renovar el inventario, ejecutar el recolector de solo lectura, indicando
+explícitamente la suscripción y el grupo correctos:
 
 ```bash
 python3 infra/ecocaf-spoke/inventariar.py \
@@ -82,8 +102,7 @@ Completar con estas revisiones:
 1. Consultar valores de configuración en un entorno autorizado sin pegarlos en chats ni versionarlos. Relacionar cada endpoint/cuenta/URI de Key Vault con su recurso, grupo, suscripción, permisos y propietario; incluir servicios externos.
 2. Revisar `function_app.py`, `requirements.txt`, `host.json` y el pipeline vigente: clientes de SDK, llamadas HTTP, SQL/Cosmos/Storage, recursos con nombres fijos y credenciales. Los nombres de rutas como `Model`, `kpis` o `documents` no identifican el proveedor usado.
 3. Revisar slots, diagnósticos, RBAC heredado, Application Insights y dependencias observadas en ejecución. Revisar por separado los siete tipos omitidos y configuración de dominios/certificados.
-4. Confirmar frontend y consumidores, autenticación actual, datos a migrar, capacidad P1v4 disponible en la unidad de despliegue de la suscripción destino y política de publicación desde la red privada.
-5. Recuperar el contrato real de Blob, Cosmos, OpenAI y Document Intelligence:
-   cuentas, grupos, base de datos, contenedor, clave de partición, contenedores Blob,
-   modelos/versiones, identidades y roles. Confirmar si ADF y Databricks pertenecen a
-   ECOCAF o son referencias mezcladas de otras soluciones antes de crearlos.
+4. Recuperar y probar el paquete exacto del frontend, consumidores y autenticación;
+   confirmar capacidad P1v4/B1 y publicación desde la red privada.
+5. Aprobar nombres destino, modelo/versiones/capacidad de OpenAI, migración de datos,
+   migración del código a identidad y URLs/contratos privados de las tres APIs comunes.

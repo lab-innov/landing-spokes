@@ -10,17 +10,19 @@ no acreditan el estado actual de CAF ni autorizan cambios corporativos.
 
 | Tema | Hallazgo | Cambio o decisión |
 | --- | --- | --- |
-| Inventario | Exportación parcial: Function/host Storage; la documentación funcional confirma frontend, Blob de negocio, Cosmos, OpenAI y Document Intelligence | Se conserva una fundación limitada y se exige completar contratos reales antes de ampliar o activar |
-| IA y datos | El documento técnico confirma OCR, análisis con modelo y persistencia por fases | Confirmar cuentas, modelos, contenedores, partición, identidad y migración; no copiar claves históricas |
-| ADF/Databricks | La guía los menciona usando nombres de Vinculador/iDataFactory | Tratar como pendiente de atribución a ECOCAF; no crear por una referencia mezclada |
-| Topología | Plan propone VNet compartida, admite VNet por iniciativa; esta variante ya tiene VNet propia | Se conserva la migración paralela con dos subredes. Confirmar destino/IPAM con CAF; no se impone /24 |
+| Inventario | El RG `RG-POC-ECOCAF-CR` solo contiene Function, plan y host Storage; las dependencias están compartidas en `RG-POC-iDataFactory-CR` | Se modela la aplicación completa en recursos dedicados, sin modificar el origen |
+| IA y datos | El documento y los ajustes vivos confirman Blob HNS `ecocaf`, Cosmos `EcoCAF`/`Auditoria`, OpenAI y Document Intelligence | Se crean cuentas dedicadas privadas con identidad/RBAC; modelos y activación quedan bloqueados hasta aprobación y migración |
+| Frontend | La interfaz actual forma parte de un App Service compartido | Se crea frontend dedicado Node 24/B1, privado, con Entra e integración VNet; se activa solo con paquete y pruebas confirmados |
+| APIs comunes | Auditoría, notificaciones y conversión PDF son contratos HTTP compartidos | No se duplican; requieren URLs privadas verificadas antes de activar |
+| ADF/Databricks | La guía los menciona usando nombres de Vinculador/iDataFactory | Se excluyen: no existe evidencia técnica de uso por ECOCAF |
+| Topología | Plan propone VNet compartida, admite VNet por iniciativa; esta variante ya tiene VNet propia | Se conserva la migración paralela con tres subredes: endpoints, integración Function e integración frontend. Confirmar destino/IPAM con CAF |
 | Rutas | Bicep creaba tabla local a partir de IP del firewall | Se sustituye `firewallPrivateIp` por `routeTableResourceId` existente. CAF conserva control de rutas |
 | NSG | Reglas predeterminadas permitían más tráfico que la regla HTTPS visible | Se permite solo tráfico definido para integración y endpoints, con denegación final |
 | Conectividad/DNS | Producción no admite peering y cada endpoint requiere DNS central | Se retira el peering y el DNS personalizado; plataforma crea la conexión Virtual WAN y el Bicep enlaza cada endpoint a IDs de zonas existentes |
-| Asociación de endpoints | La Function aparecía sin Private Endpoint asociado y había endpoints sin DNS | Blob, Queue y Table apuntan al Storage de host; `sites` apunta a la Function. Cada conexión declara `privateLinkServiceId`, `groupIds` y un zone group hacia una zona central existente |
+| Asociación de endpoints | La Function aparecía sin Private Endpoint asociado y había endpoints sin DNS | Se asocian host Blob/Queue/Table, datos Blob/DFS, Cosmos Sql, OpenAI account, Document Intelligence account y sites de Function/frontend; todos usan zonas centrales existentes |
 | Entra | Autenticación obligatoria sin lista de identidades autorizadas | Se añade allowlist por object ID y se bloquea activación incompleta |
 | Roles | Table Data Contributor se asignaba siempre al host | Se exige necesidad explícita de tablas/bindings; Blob Data Owner se conserva para AzureWebJobsStorage |
-| Defender | Sin configuración ni comprobación | Se habilita configuración del Storage de host heredada de CAF; script revisa AppServices/CloudPosture y host Storage |
+| Defender | Sin configuración ni comprobación | Ambos Storage heredan Defender; el preflight revisa AppServices, CloudPosture, AI, CosmosDbs y endpoints aprobados de Function/frontend |
 | Auditoría | Blob y cuenta con diagnóstico; Queue/Table sin diagnóstico propio | Se añaden logs de datos y opción de envío al Event Hub existente |
 | Alertas | No había alertas propias | Errores HTTP y volumen de solicitudes al Action Group corporativo |
 | Application Insights | No permitido por CAF para esta carga | Se retira la connection string; Dynatrace se coordina fuera de esta plantilla |
@@ -33,12 +35,12 @@ no acreditan el estado actual de CAF ni autorizan cambios corporativos.
 - **APIM:** el Plan prefiere productos a nivel de servicio y el DDA ws-ai/gw-ai
   con contingencia. Se reutilizará la solución corporativa que confirme CAF;
   este Bicep no crea APIM ni implementa productos, cuotas o routing de modelos.
-- **Servicios de datos/IA:** recuperar app settings sin divulgar valores, revisar
-  código/pipeline y relacionar cada dependencia con propietario, red, identidad,
-  permisos y plan de protección. Los nombres de las 23 rutas no identifican un SDK.
-- **Archivos:** identificar el almacenamiento de documentos. Defender sobre el
-  Storage de host no protege automáticamente archivos externos ni llamadas HTTP
-  que procesan archivos en memoria. Diseñar el control de análisis en la ruta real.
+- **Servicios de datos/IA:** aprobar nombres definitivos, modelo/versiones/capacidad,
+  migración de datos y compatibilidad del código con identidad administrada. El
+  Bicep reproduce contratos observados, no ejecuta la migración.
+- **Archivos:** los documentos se ubican en el Storage HNS dedicado. Confirmar que
+  el análisis antimalware cubra ese flujo y bloquee procesamiento hasta resultado
+  limpio; habilitar Defender no demuestra por sí solo esa conducta.
 - **Secretos:** Key Vault dedicado cuando se confirme un consumidor. Las referencias
   a vault existente requieren permisos y conectividad explícitos; no se inventan.
 - **Disponibilidad:** el plan se actualiza a P1v4 de una instancia y Storage LRS
@@ -57,5 +59,6 @@ no acreditan el estado actual de CAF ni autorizan cambios corporativos.
 
 Compilación y linter, parámetros de ejemplo compilables pero no desplegables,
 pruebas de contratos, restricciones de red y ausencia de recursos públicos/DNS
-nuevos. No se ejecutaron inventario Azure, validate, what-if, create ni pruebas
-funcionales. El código y los datos originales permanecen fuera de esta revisión.
+nuevos. Se ejecutó inventario Azure de solo lectura. No se ejecutaron `az deployment
+group validate`, what-if, despliegue ni pruebas funcionales. El código, los datos y
+los recursos originales no se modificaron.
