@@ -32,10 +32,6 @@ param namePrefix string = 'esg'
 @description('Etiquetas de todos los recursos; iniciativa y clasificación son obligatorias.')
 param tags object
 
-@description('ID de VNet hub corporativa; plataforma crea el peering inverso.')
-@minLength(1)
-param hubVnetResourceId string
-
 @description('ID de tabla de rutas corporativa asociada a las subredes ESG.')
 @minLength(1)
 param existingRouteTableResourceId string
@@ -43,6 +39,9 @@ param existingRouteTableResourceId string
 @description('ID de Log Analytics central existente.')
 @minLength(1)
 param existingLogAnalyticsWorkspaceResourceId string
+
+@description('IDs completos de zonas DNS privadas centralizadas en RG-PRIVATEDNS-PR, indexados por groupId.')
+param privateDnsZoneResourceIds object
 
 @description('Tenant Entra de la autenticación de la Function.')
 @minLength(1)
@@ -70,10 +69,6 @@ param foundryModelDeployments modelDeploymentType[] = []
 @description('Modelos OpenAI separados conservados para la funcionalidad ESG.')
 param openAiModelDeployments modelDeploymentType[] = []
 
-@description('DNS corporativos que resuelven las zonas privadas CAF.')
-@minLength(1)
-param dnsServers string[]
-param useRemoteGateways bool = false
 @description('Redes autorizadas para llamar a la Function por VPN/APIM.')
 param apiClientPrefixes string[] = []
 param operatorPrefixes string[] = []
@@ -111,7 +106,6 @@ var token = toLower(uniqueString(subscription().id, resourceGroupName, location)
 var normalizedPrefix = toLower(replace(namePrefix, '-', ''))
 var names = {
   vnet: 'vnet-${namePrefix}-secure-${token}'
-  applicationInsights: 'appi-${namePrefix}-secure-${token}'
   workloadStorage: take('st${normalizedPrefix}data${token}', 24)
   functionStorage: take('st${normalizedPrefix}func${token}', 24)
   foundryAccount: take('aif-${namePrefix}-${token}', 64)
@@ -138,7 +132,7 @@ module contracts './modules/contracts.bicep' = {
   name: 'esg-contratos'
   scope: spokeResourceGroup
   params: {
-    validSecurity: any(toLower(resourceGroupName) != 'rg-poc-esg-cr' && !empty(tags.?DataClassification ?? '') && !empty(tags.?iniciativa ?? '') && (empty(siemAuthorizationRuleId) == empty(siemEventHubName)))
+    validSecurity: any(toLower(resourceGroupName) != 'rg-poc-esg-cr' && !empty(tags.?DataClassification ?? '') && !empty(tags.?iniciativa ?? '') && tags.?OpsDept == 'DTI' && !empty(tags.?UserDept ?? '') && (empty(siemAuthorizationRuleId) == empty(siemEventHubName)))
     validGrounding: any(!deployGroundingWithBing || (!empty(groundingComplianceExceptionId) && !startsWith(groundingComplianceExceptionId, 'REPLACE')))
     validModels: any(modelsApproved || (empty(foundryModelDeployments) && empty(openAiModelDeployments)))
     validActivation: any(!activateWorkload || (!empty(actionGroupResourceId) && networkVerified && defenderVerified && siemVerified && applicationVerified && (!scanUploads || uploadGateVerified) && !empty(securityApprovalId) && !empty(functionAllowedPrincipalIds) && !empty(functionPrivateIps) && !empty(cosmosPrivateIps) && !empty(apiClientPrefixes) && !empty(monitorPrefixes)))
@@ -155,27 +149,12 @@ module network './modules/network.bicep' = {
     vnetAddressPrefixes: vnetAddressPrefixes
     subnetPrefixes: subnetPrefixes
     routeTableResourceId: existingRouteTableResourceId
-    hubVnetResourceId: hubVnetResourceId
-    dnsServers: dnsServers
-    useRemoteGateways: useRemoteGateways
     apiClientPrefixes: apiClientPrefixes
     operatorPrefixes: operatorPrefixes
     monitorPrefixes: monitorPrefixes
     cosmosPrivateIps: cosmosPrivateIps
     functionPrivateIps: functionPrivateIps
     extraEgress: extraEgress
-  }
-  dependsOn: [contracts]
-}
-
-module monitoring './modules/monitoring.bicep' = {
-  name: 'esg-monitoring'
-  scope: spokeResourceGroup
-  params: {
-    location: location
-    tags: tags
-    applicationInsightsName: names.applicationInsights
-    logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
   }
   dependsOn: [contracts]
 }
@@ -332,7 +311,6 @@ module functionApp './modules/function-app.bicep' = {
     requestsAlertThreshold: functionRequestsAlertThreshold
     allowedPrincipalIds: functionAllowedPrincipalIds
     activateWorkload: activateWorkload
-    applicationInsightsConnectionString: monitoring.outputs.connectionString
     logAnalyticsWorkspaceResourceId: existingLogAnalyticsWorkspaceResourceId
     siemAuthorizationRuleId: siemAuthorizationRuleId
     siemEventHubName: siemEventHubName
@@ -442,6 +420,7 @@ module privateEndpoints './modules/private-endpoints.bicep' = {
     tags: tags
     subnetResourceId: network.outputs.peSubnetId
     endpoints: privateEndpointSpecs
+    privateDnsZoneResourceIds: privateDnsZoneResourceIds
   }
 }
 
@@ -467,8 +446,6 @@ module roleAssignments './modules/role-assignments.bicep' = {
 
 output resourceGroupId string = spokeResourceGroup.id
 output vnetId string = network.outputs.vnetId
-output spokeToHubPeeringId string = network.outputs.spokeToHubPeeringId
-output reversePeeringRequired bool = true
 output routeTableResourceId string = existingRouteTableResourceId
 output centralLogAnalyticsWorkspaceResourceId string = existingLogAnalyticsWorkspaceResourceId
 output privateEndpointIds array = privateEndpoints.outputs.resourceIds
@@ -492,12 +469,12 @@ output functionAppHostname string = functionApp.outputs.hostname
 output functionPrincipalId string = functionApp.outputs.principalId
 output dataFactoryPrincipalId string = dataFactory.outputs.principalId
 output foundryProjectPrincipalId string = foundry.outputs.projectPrincipalId
-output dnsOwnership string = 'DNS central mediante DINE y resolver corporativo; no se crean zonas ni grupos DNS locales.'
+output dnsOwnership string = 'Zonas centralizadas y grupos DNS asociados por este despliegue; no se crean zonas privadas.'
 output platformActions array = [
-  'Crear peering inverso hub a spoke.'
-  'Verificar integración DINE y resolución central de cada endpoint privado.'
+  'Crear la conexión de esta VNet al hub de Virtual WAN y validar rutas desde VPN.'
+  'Verificar resolución central de cada endpoint privado y de su grupo DNS.'
   'Aprobar endpoints administrados de ADF hacia Storage y Databricks.'
-  'Asociar Application Insights al AMPLS corporativo y comprobar ingestión y consulta privadas.'
+  'Configurar Dynatrace según el proceso de plataforma; no se crea Application Insights.'
 ]
 
 output securityResourceIds object = { workloadStorage: workloadStorage.outputs.resourceId, functionStorage: functionStorage.outputs.resourceId, cosmos: cosmos.outputs.resourceId, foundry: foundry.outputs.accountResourceId, openAi: openAi.outputs.resourceId, functionApp: functionApp.outputs.resourceId, databricks: databricks.outputs.resourceId }

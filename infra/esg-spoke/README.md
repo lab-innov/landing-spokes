@@ -2,10 +2,11 @@
 
 Infraestructura paralela con VNet propia, Foundry/proyecto, OpenAI separado,
 Document Intelligence, Grounding opcional, Databricks Premium, Data Factory,
-Function Linux privada con Entra, dos Storage ZRS, Cosmos DB y Application Insights.
+Function Linux privada con Entra, dos Storage ZRS y Cosmos DB. La observabilidad
+de aplicación con Dynatrace queda fuera de este Bicep.
 Conserva `esg-db`, sus particiones y los dos pipelines/notebooks ESG.
 
-Reutiliza hub, VPN, tabla de rutas, DNS/DINE, Log Analytics, AMPLS y Action Group
+Reutiliza Virtual WAN, VPN, tabla de rutas, zonas DNS privadas centrales, Log Analytics, AMPLS y Action Group
 corporativos. No crea APIM, firewall, VPN Gateway, DNS privado ni servicios de
 contenedores. El bloque `/24` del otro patrón no se aplica a ESG.
 

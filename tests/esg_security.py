@@ -14,7 +14,7 @@ params=load('check-esg-parameters');security=load('check-esg-security');acceptan
 SID='11111111-1111-1111-1111-111111111111'
 def rid(kind):return f'/subscriptions/{SID}/resourceGroups/caf/providers/{kind}/central'
 def foundation():
-    return dict(resourceGroupName='rg-esg-new',tags={'iniciativa':'ESG','DataClassification':'Interna'},vnetAddressPrefixes=['10.180.0.0/21'],subnetPrefixes=dict(privateEndpoints='10.180.0.0/24',foundryAgents='10.180.1.0/24',functionsIntegration='10.180.2.0/26',databricksPublic='10.180.3.0/26',databricksPrivate='10.180.4.0/26'),dnsServers=['10.179.0.4'],hubVnetResourceId=rid('Microsoft.Network/virtualNetworks'),existingRouteTableResourceId=rid('Microsoft.Network/routeTables'),existingLogAnalyticsWorkspaceResourceId=rid('Microsoft.OperationalInsights/workspaces'))
+    return dict(resourceGroupName='rg-esg-new',tags={'iniciativa':'ESG','DataClassification':'Interna','OpsDept':'DTI','UserDept':'GPFEI'},vnetAddressPrefixes=['10.180.0.0/21'],subnetPrefixes=dict(privateEndpoints='10.180.0.0/24',foundryAgents='10.180.1.0/24',functionsIntegration='10.180.2.0/26',databricksPublic='10.180.3.0/26',databricksPrivate='10.180.4.0/26'),existingRouteTableResourceId=rid('Microsoft.Network/routeTables'),existingLogAnalyticsWorkspaceResourceId=rid('Microsoft.OperationalInsights/workspaces'),privateDnsZoneResourceIds={key:rid('Microsoft.Network/privateDnsZones') for key in ('blob','queue','table','account','Sql','sites','dataFactory','portal','databricks_ui_api','browser_authentication')})
 def activated():
     return dict(foundation(),activateWorkload=True,networkVerified=True,defenderVerified=True,siemVerified=True,applicationVerified=True,uploadGateVerified=True,securityApprovalId='CAF-123',actionGroupResourceId=rid('Microsoft.Insights/actionGroups'),functionAllowedPrincipalIds=[SID],functionPrivateIps=['10.180.0.5'],cosmosPrivateIps=['10.180.0.6'],apiClientPrefixes=['10.179.1.0/24'],monitorPrefixes=['10.179.2.4'])
 
@@ -25,7 +25,7 @@ class Parameters(unittest.TestCase):
         for key in ('defenderVerified','siemVerified','networkVerified','applicationVerified','uploadGateVerified'):
             self.assertTrue(params.check(dict(activated(),**{key:False})))
     def test_invalid_inputs(self):
-        for key,value in [('resourceGroupName','RG-POC-ESG-CR'),('cosmosPrivateIps',['10.181.0.5']),('dnsServers',[]),('tags',{}),('siemEventHubName','alone'),('extraEgress',[{'purpose':'functionsIntegration','destination':'0.0.0.0/0','ports':['*'],'justification':''}])]:
+        for key,value in [('resourceGroupName','RG-POC-ESG-CR'),('cosmosPrivateIps',['10.181.0.5']),('tags',{}),('siemEventHubName','alone'),('extraEgress',[{'purpose':'functionsIntegration','destination':'0.0.0.0/0','ports':['*'],'justification':''}])]:
             self.assertTrue(params.check(dict(foundation(),**{key:value})))
         p=foundation();p['subnetPrefixes']['databricksPrivate']='10.180.3.0/26';self.assertTrue(params.check(p))
     def test_models_and_grounding_require_approval(self):
@@ -57,10 +57,11 @@ class Template(unittest.TestCase):
                 else:cls.resources.append(r)
         walk(cls.arm)
     def test_no_public_or_duplicate_platform(self):
-        forbidden={'Microsoft.Network/publicIPAddresses','Microsoft.Network/privateDnsZones','Microsoft.Network/privateDnsZones/virtualNetworkLinks','Microsoft.Network/privateEndpoints/privateDnsZoneGroups','Microsoft.Network/azureFirewalls','Microsoft.Network/virtualNetworkGateways','Microsoft.OperationalInsights/workspaces','Microsoft.Security/pricings'}
+        forbidden={'Microsoft.Network/publicIPAddresses','Microsoft.Network/privateDnsZones','Microsoft.Network/privateDnsZones/virtualNetworkLinks','Microsoft.Network/virtualNetworks/virtualNetworkPeerings','Microsoft.Insights/components','Microsoft.Network/azureFirewalls','Microsoft.Network/virtualNetworkGateways','Microsoft.OperationalInsights/workspaces','Microsoft.Security/pricings'}
         for r in self.resources:
             self.assertNotIn(r['type'],forbidden)
             if 'publicNetworkAccess' in r.get('properties',{}):self.assertEqual(r['properties']['publicNetworkAccess'],'Disabled')
+        self.assertEqual(len([r for r in self.resources if r['type']=='Microsoft.Network/privateEndpoints/privateDnsZoneGroups']),len([r for r in self.resources if r['type']=='Microsoft.Network/privateEndpoints']))
     def test_storage_data_audit_and_protection(self):
         protections=[r for r in self.resources if r['type']=='Microsoft.Security/defenderForStorageSettings'];self.assertEqual(len(protections),2)
         for r in protections:
@@ -98,4 +99,3 @@ class Template(unittest.TestCase):
         self.assertTrue(cosmos);self.assertTrue(all(r['properties']['destinationAddressPrefix']=='cosmos' for r in cosmos))
 
 if __name__=='__main__':unittest.main()
-

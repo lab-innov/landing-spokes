@@ -7,7 +7,7 @@ Consultar la [revisión CAF y seguridad](infra/esg-spoke/REVISION-CAF.md) para l
 ## Recursos definidos
 
 - Red virtual del spoke con subredes dedicadas.
-- Peering desde el spoke hacia el hub corporativo.
+- Conexión al hub de Virtual WAN a cargo de plataforma.
 - Private Endpoints para los servicios compatibles.
 - Microsoft Foundry con proyecto; modelos sujetos a aprobación explícita.
 - Azure OpenAI.
@@ -18,7 +18,7 @@ Consultar la [revisión CAF y seguridad](infra/esg-spoke/REVISION-CAF.md) para l
 - Azure Function App.
 - Dos cuentas de Storage.
 - Azure Cosmos DB.
-- Application Insights.
+- Diagnósticos en Log Analytics e integración de aplicación con Dynatrace fuera del Bicep.
 - Identidades administradas y asignaciones RBAC.
 
 ## Cambios respecto a la infraestructura original
@@ -27,7 +27,7 @@ Consultar la [revisión CAF y seguridad](infra/esg-spoke/REVISION-CAF.md) para l
 - Se deshabilita la autenticación mediante claves cuando el servicio lo permite.
 - Se agregan Private Endpoints y segmentación por subredes.
 - El tráfico de salida utiliza la tabla de rutas suministrada por el hub corporativo.
-- El DNS privado queda administrado por las políticas DINE y la infraestructura DNS corporativa.
+- Cada Private Endpoint asocia su grupo a una zona DNS privada central existente.
 - Databricks utiliza VNet Injection y nodos sin direcciones IP públicas.
 - Function App utiliza integración con la VNet y autenticación con Microsoft Entra ID.
 - Los servicios utilizan identidades administradas y permisos RBAC.
@@ -40,7 +40,7 @@ Consultar la [revisión CAF y seguridad](infra/esg-spoke/REVISION-CAF.md) para l
 - Código fuente de Function App.
 - Contenido de los notebooks de Databricks.
 - Migración de datos de Storage y Cosmos DB.
-- Peering inverso desde el hub.
+- Conexión de Virtual WAN, rutas corporativas y pruebas desde VPN.
 - Zonas DNS privadas y políticas corporativas.
 - Activación automática de los triggers de Data Factory.
 

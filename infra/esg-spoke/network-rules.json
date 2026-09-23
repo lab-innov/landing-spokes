@@ -29,13 +29,13 @@
       }
     },
     {
-      "name": "dns-caf",
+      "name": "dns-plataforma",
       "properties": {
         "direction": "Outbound",
         "access": "Allow",
         "protocol": "*",
         "sourceAddressPrefix": "foundryAgents",
-        "destinationAddressPrefix": "dns",
+        "destinationAddressPrefix": "AzurePlatformDNS",
         "destinationPortRanges": [
           "53"
         ],

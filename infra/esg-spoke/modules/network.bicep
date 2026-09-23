@@ -6,10 +6,6 @@ param vnetName string
 param vnetAddressPrefixes array
 param subnetPrefixes object
 param routeTableResourceId string
-param hubVnetResourceId string
-
-param dnsServers array
-param useRemoteGateways bool
 param apiClientPrefixes array
 param operatorPrefixes array
 param monitorPrefixes array
@@ -65,7 +61,6 @@ module workloadNsgs './nsg.bicep' = [for (purpose, i) in ['privateEndpoints', 'f
     tags: tags
     purpose: purpose
     prefixes: subnetPrefixes
-    dnsServers: dnsServers
     apiClientPrefixes: apiClientPrefixes
     operatorPrefixes: operatorPrefixes
     monitorPrefixes: monitorPrefixes
@@ -80,7 +75,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   location: location
   tags: tags
   properties: {
-    dhcpOptions: { dnsServers: dnsServers }
     addressSpace: {
       addressPrefixes: vnetAddressPrefixes
     }
@@ -108,19 +102,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   }
 }
 
-resource spokeToHubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-05-01' = {
-  name: 'peer-${vnetName}-to-hub'
-  parent: vnet
-  properties: {
-    allowForwardedTraffic: true
-    allowGatewayTransit: false
-    allowVirtualNetworkAccess: true
-    remoteVirtualNetwork: {
-      id: hubVnetResourceId
-    }
-    useRemoteGateways: useRemoteGateways
-  }
-}
 
 output vnetId string = vnet.id
 output vnetName string = vnet.name
@@ -129,4 +110,3 @@ output foundryAgentSubnetId string = '${vnet.id}/subnets/snet-foundry-agents'
 output functionsIntegrationSubnetId string = '${vnet.id}/subnets/snet-functions-integration'
 output databricksPublicSubnetName string = 'snet-databricks-public'
 output databricksPrivateSubnetName string = 'snet-databricks-private'
-output spokeToHubPeeringId string = spokeToHubPeering.id

@@ -3,9 +3,10 @@
 ## Fundación
 
 Copiar `environments/esg-spoke/esg-spoke.example.bicepparam` a un archivo privado.
-Completar suscripción/RG de destino, cinco CIDR IPAM sin solapamiento, DNS, hub,
-rutas, Log Analytics, tenant, registro Entra y etiquetas `iniciativa` y
-`DataClassification`. No reutilizar `RG-POC-ESG-CR`.
+Completar suscripción/RG de destino, cinco CIDR IPAM sin solapamiento, IDs de
+zonas DNS centrales, rutas, Log Analytics, tenant, registro Entra y etiquetas
+`iniciativa`, `OpsDept=DTI`, `UserDept` y `DataClassification`. No reutilizar
+`RG-POC-ESG-CR`.
 
 Para fundación usar `activateWorkload=false`, listas de modelos vacías y
 `deployGroundingWithBing=false`, salvo selección de modelos y excepción ya
@@ -35,8 +36,9 @@ ni analiza contenido. Las reglas propias cierran las entradas/salidas restantes.
 - `apiClientPrefixes` solo permite HTTPS hacia `functionPrivateIps`; el NSG no
   abre el resto de endpoints a los usuarios VPN. `operatorPrefixes` permite
   HTTPS administrativo a endpoints y debe limitarse a ejecutores autorizados.
-- `dnsServers` permite resolución corporativa. También se permite DNS Azure por
-  puerto 53. `monitorPrefixes` debe contener los endpoints AMPLS existentes.
+- DNS de plataforma de Azure se permite por puerto 53 y los grupos de cada
+  endpoint se asocian a zonas privadas centrales existentes. `monitorPrefixes`
+  debe contener los endpoints AMPLS existentes.
 - Foundry conserva comunicación interna de su subred, sondas y dependencias AAD,
   MCR, Azure Front Door, Storage y Monitor. Functions permite AAD y Monitor.
 - `extraEgress` permite TCP a IPv4/CIDR /24 o más específico, puertos individuales
@@ -51,12 +53,13 @@ ni analiza contenido. Las reglas propias cierran las entradas/salidas restantes.
 
 La tabla corporativa se conserva en todas las subredes. Confirmar efectos de UDR
 sobre endpoints, rutas de retorno, control plane Databricks, dependencias y salidas
-externas de scraping. `useRemoteGateways=true` requiere tránsito habilitado desde
-el hub; no crea VPN. No se modifica el firewall corporativo.
+externas de scraping. Plataforma crea la conexión al hub de Virtual WAN y valida
+el tránsito de VPN; el spoke no crea peerings. No se modifica el firewall corporativo.
 
-DINE cubre zonas Foundry/AI, OpenAI, Blob/Queue/Table, Cosmos, App Service
-(incluido SCM), ADF y Databricks. DNS corporativo debe resolverlas desde Azure,
-VPN y ejecutores. Verificar también browser_authentication de Databricks para
+Los grupos DNS cubren Foundry/AI, OpenAI, Blob/Queue/Table, Cosmos, App Service
+(incluido SCM), ADF y Databricks mediante zonas centrales existentes. DNS
+corporativo debe resolverlas desde Azure, VPN y ejecutores. Verificar también
+browser_authentication de Databricks para
 la región y su propiedad compartida antes de crear otro endpoint equivalente.
 
 ## Defender y SIEM

@@ -13,8 +13,9 @@ def check(p):
     def require(ok,msg):
         if not ok: errors.append(msg)
     require(not re.search(r'REPLACE|REEMPLAZAR|00000000-0000-0000-0000-000000000000|confirm-before',json.dumps(p),re.I),'Sustituir los marcadores y confirmar clasificación.')
-    for tag in ('iniciativa','DataClassification'):
+    for tag in ('iniciativa','DataClassification','OpsDept','UserDept'):
         require(bool(p.get('tags',{}).get(tag)),f'Etiqueta obligatoria: {tag}.')
+    require(p.get('tags',{}).get('OpsDept')=='DTI','OpsDept debe ser DTI.')
     require(p.get('resourceGroupName','').lower() != 'rg-poc-esg-cr','Preservar el RG original; la migración es paralela.')
     nets={}
     try:
@@ -29,18 +30,17 @@ def check(p):
         values=list(nets.values())
         require(not any(a.overlaps(b) for i,a in enumerate(values) for b in values[i+1:]),'Subredes solapadas.')
     except (KeyError,ValueError,TypeError): errors.append('CIDR o contrato de subred inválido.')
-    for key in ('dnsServers','apiClientPrefixes','operatorPrefixes','monitorPrefixes','cosmosPrivateIps','functionPrivateIps'):
+    for key in ('apiClientPrefixes','operatorPrefixes','monitorPrefixes','cosmosPrivateIps','functionPrivateIps'):
         values=p.get(key,[])
-        if key=='dnsServers': require(bool(values),'DNS corporativo requerido.')
         for value in values:
             try:
                 n=ipaddress.IPv4Network(value,strict=True)
                 require(any(n.subnet_of(v) for v in PRIVATE),f'{key}: usar IPv4 privada.')
-                if key=='dnsServers' or key.endswith('PrivateIps'): require(n.prefixlen==32,f'{key}: usar IP individual.')
+                if key.endswith('PrivateIps'): require(n.prefixlen==32,f'{key}: usar IP individual.')
                 if key.endswith('PrivateIps') and 'privateEndpoints' in nets:
                     pe=nets['privateEndpoints'];require(n.subnet_of(pe) and int(n.network_address)-int(pe.network_address)>=4 and n.network_address!=pe.broadcast_address,f'{key}: IP fuera de endpoints o reservada.')
             except (ValueError,TypeError): errors.append(f'{key}: dirección inválida.')
-    for flag in ('activateWorkload','networkVerified','defenderVerified','siemVerified','applicationVerified','uploadGateVerified','modelsApproved','useRemoteGateways','functionUsesBlobTriggers','functionUsesDurableStorage','deployGroundingWithBing','scanUploads'):
+    for flag in ('activateWorkload','networkVerified','defenderVerified','siemVerified','applicationVerified','uploadGateVerified','modelsApproved','functionUsesBlobTriggers','functionUsesDurableStorage','deployGroundingWithBing','scanUploads'):
         require(type(p.get(flag,False)) is bool,f'{flag}: debe ser booleano.')
     ids=p.get('functionAllowedPrincipalIds',[])
     require(len(ids)<=13 and len(ids)==len(set(ids)),'Lista de identidades duplicada o demasiado larga.')
@@ -59,8 +59,10 @@ def check(p):
             require(all(model.get(k) for k in ('name','model','version','sku','raiPolicy')) and type(model.get('capacity')) is int and model['capacity']>0,'Contrato de modelo incompleto.')
     if p.get('siemAuthorizationRuleId'):
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft.EventHub/namespaces/[^/]+/authorizationRules/[^/]+', p['siemAuthorizationRuleId'])), 'ID de regla del namespace Event Hub inválido.')
-    for key, kind in [('hubVnetResourceId','Microsoft.Network/virtualNetworks'), ('existingRouteTableResourceId','Microsoft.Network/routeTables'), ('existingLogAnalyticsWorkspaceResourceId','Microsoft.OperationalInsights/workspaces')]:
+    for key, kind in [('existingRouteTableResourceId','Microsoft.Network/routeTables'), ('existingLogAnalyticsWorkspaceResourceId','Microsoft.OperationalInsights/workspaces')]:
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/'+re.escape(kind)+r'/[^/]+', p.get(key,''))), f'{key}: ID completo requerido.')
+    zones=p.get('privateDnsZoneResourceIds',{})
+    require({'blob','queue','table','account','Sql','sites','dataFactory','portal','databricks_ui_api','browser_authentication'}==set(zones),'Definir todas las zonas DNS privadas ESG.')
     if p.get('actionGroupResourceId'):
         require(bool(re.fullmatch(r'/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft.Insights/actionGroups/[^/]+',p['actionGroupResourceId'])), 'ID de Action Group inválido.')
     require(bool(p.get('siemAuthorizationRuleId'))==bool(p.get('siemEventHubName')),'SIEM: ID y nombre deben proporcionarse juntos.')

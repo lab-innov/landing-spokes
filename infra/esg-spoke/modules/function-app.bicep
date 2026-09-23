@@ -12,7 +12,6 @@ param allowedPrincipalIds array
 param activateWorkload bool
 param actionGroupResourceId string
 param requestsAlertThreshold int
-param applicationInsightsConnectionString string
 param logAnalyticsWorkspaceResourceId string
 param siemAuthorizationRuleId string
 param siemEventHubName string
@@ -57,10 +56,6 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
       scmMinTlsVersion: '1.2'
       vnetRouteAllEnabled: true
       appSettings: [
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: applicationInsightsConnectionString
-        }
         {
           name: 'AzureWebJobsStorage__accountName'
           value: hostStorageAccountName
