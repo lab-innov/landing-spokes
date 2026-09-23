@@ -20,7 +20,7 @@ Los documentos difieren en ciertos límites de suscripción y organización de A
 | Document Intelligence | FormRecognizer S0, identidad, acceso privado y Entra | Mantiene servicio; validar que el SDK envíe documentos por un mecanismo compatible con red privada |
 | Key Vault | Standard, RBAC, privado, recuperación 90 días y protección contra purga | Acceso de aplicación solo a secretos enumerados; no se importan valores |
 | Observabilidad | App Insights de la carga con ingestión/consulta públicas deshabilitadas, LAW existente | No recrea LAW ni sus 686 tablas; requiere AMPLS corporativo |
-| Red | Una VNet `/24`, dos subredes, dos NSG, rutas existentes, peering spoke → hub | VPN corporativa; DNS central por DINE; sin Bastion, firewall, resolver o gateway VPN nuevos |
+| Red | Una VNet `/24`, dos subredes, dos NSG, rutas existentes y DNS de Azure | Producción no crea peering; plataforma completa la conexión Virtual WAN |
 
 B1 y LRS preservan la base funcional, **no ofrecen redundancia zonal ni prueban resiliencia de producción**. Se debe aprobar RTO/RPO y carga: un cambio a más instancias, otro SKU o ZRS requiere diseño y coste explícitos. Backup no sustituye alta disponibilidad ni prueba de restauración.
 
@@ -40,7 +40,7 @@ Se crean nueve endpoints: host Blob/Queue/Table, documentos Blob, Function sites
 
 DINE debe cubrir `privatelink.blob.core.windows.net`, `privatelink.queue.core.windows.net`, `privatelink.table.core.windows.net`, `privatelink.azurewebsites.net` (incluido SCM), `privatelink.documents.azure.com`, `privatelink.openai.azure.com`, `privatelink.cognitiveservices.azure.com` y `privatelink.vaultcore.azure.net`. No se crean zonas, enlaces ni grupos DNS locales. AMPLS tiene su propia cobertura DNS corporativa. Comprobar resolución desde la integración Functions, el ejecutor de publicación y clientes VPN.
 
-Plataforma completa el peering inverso, las rutas de retorno y tránsito VPN. `useRemoteGateways` solo se activa después de habilitar el lado hub. Revisar que la tabla corporativa no fuerce rutas incompatibles hacia endpoints. Permitir DNS/Entra y dependencias de plataforma mediante el firewall central; no se crea salida general de Internet. `extraEgress` requiere destino IPv4 acotado, puertos individuales y justificación: no sirve para omitir la revisión de dependencias.
+Plataforma completa la conexión Virtual WAN, las rutas de retorno y tránsito VPN. Cada endpoint se asocia a una zona centralizada en `RG-PRIVATEDNS-PR`; no se crean zonas. Revisar que la tabla corporativa no fuerce rutas incompatibles. No se crea Application Insights; Dynatrace se coordina fuera de esta plantilla. `extraEgress` requiere destino IPv4 acotado, puertos individuales y justificación.
 
 ## Identidad, modelos y compatibilidad
 

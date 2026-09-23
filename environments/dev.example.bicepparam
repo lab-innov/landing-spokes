@@ -12,10 +12,16 @@ param subnetPrefixes = {
   functionsIntegration: 'PENDIENTE-IPAM'
 }
 param routeTableResourceId = 'PENDIENTE-ID-TABLA-CAF'
-param dnsServers = ['PENDIENTE-DNS-CAF']
-param hubVnetResourceId = 'PENDIENTE-ID-HUB'
 param logAnalyticsWorkspaceResourceId = 'PENDIENTE-ID-LOG-ANALYTICS'
-param applicationInsightsName = 'PENDIENTE'
+param privateDnsZoneResourceIds = {
+  blob: 'PENDIENTE-ID-ZONA-BLOB'
+  queue: 'PENDIENTE-ID-ZONA-QUEUE'
+  table: 'PENDIENTE-ID-ZONA-TABLE'
+  sites: 'PENDIENTE-ID-ZONA-AZUREWEBSITES'
+  cosmosSql: 'PENDIENTE-ID-ZONA-COSMOS-SQL'
+  cognitiveServicesAccount: 'PENDIENTE-ID-ZONA-COGNITIVE-SERVICES'
+  keyVault: 'PENDIENTE-ID-ZONA-KEY-VAULT'
+}
 param businessStorageAccountName = 'PENDIENTE'
 param cosmosAccountName = 'PENDIENTE'
 param openAiAccountName = 'PENDIENTE'
@@ -26,7 +32,7 @@ param applicationSettings = {}
 param allowedOrigins = []
 param activateFunctionApp = false
 
-param tags = { iniciativa: 'ANALISISDEC', administradoPor: 'Bicep', DataClassification: 'PENDIENTE-CLASIFICACION' }
+param tags = { iniciativa: 'ANALISISDEC', administradoPor: 'Bicep', DataClassification: 'PENDIENTE-CLASIFICACION', OpsDept: 'DTI', UserDept: 'PENDIENTE-AREA-FUNCIONAL' }
 param apiClientPrefixes = []
 param operatorPrefixes = []
 param monitorPrefixes = []

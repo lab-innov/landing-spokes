@@ -6,6 +6,7 @@ param location string = 'eastus'
 param tags object = {
   iniciativa: 'ANALISISDEC'
   administradoPor: 'Bicep'
+  OpsDept: 'DTI'
 }
 @minLength(2)
 @maxLength(60)
@@ -26,11 +27,17 @@ param subnetPrefixes {
 @description('ID de tabla de rutas corporativa existente; no se modifica su contenido.')
 @minLength(1)
 param routeTableResourceId string
-@minLength(1)
-param dnsServers array
-param hubVnetResourceId string
 param logAnalyticsWorkspaceResourceId string
-param applicationInsightsName string
+@description('IDs completos de zonas DNS privadas centralizadas en RG-PRIVATEDNS-PR.')
+param privateDnsZoneResourceIds {
+  blob: string
+  queue: string
+  table: string
+  sites: string
+  cosmosSql: string
+  cognitiveServicesAccount: string
+  keyVault: string
+}
 param businessStorageAccountName string
 param cosmosAccountName string
 param openAiAccountName string
@@ -65,7 +72,6 @@ param operatorPrefixes string[] = []
 param monitorPrefixes string[] = []
 @description('IP reales del endpoint sites, obtenidas después de la fundación.')
 param functionPrivateIps string[] = []
-param useRemoteGateways bool = false
 @description('Excepciones de salida TCP: purpose=functionsIntegration, destination, ports, justification.')
 param extraEgress array = []
 @description('Object IDs de usuarios o identidades autorizadas; no son client IDs ni grupos.')
@@ -93,7 +99,7 @@ param requestsAlertThreshold int = 10000
 module contracts './modules/contracts.bicep' = {
   name: 'analisisdec-contratos'
   params: {
-    validSecurity: any(endsWith(string(vnetAddressPrefixes[0]), '/24') && storageAccountName != businessStorageAccountName && toLower(resourceGroup().name) != 'rg-poc-analisisdec-cr' && (empty(models) || modelsApproved) && !empty(tags.?iniciativa ?? '') && !empty(tags.?DataClassification ?? '') && empty(filter(allowedOrigins, origin => contains(origin, '*'))) && (empty(siemAuthorizationRuleId) == empty(siemEventHubName)))
+    validSecurity: any(endsWith(string(vnetAddressPrefixes[0]), '/24') && storageAccountName != businessStorageAccountName && toLower(resourceGroup().name) != 'rg-poc-analisisdec-cr' && (empty(models) || modelsApproved) && !empty(tags.?iniciativa ?? '') && !empty(tags.?DataClassification ?? '') && tags.?OpsDept == 'DTI' && !empty(tags.?UserDept ?? '') && empty(filter(allowedOrigins, origin => contains(origin, '*'))) && (empty(siemAuthorizationRuleId) == empty(siemEventHubName)))
     validSettings: any(empty(filter(items(applicationSettings), setting => startsWith(toLower(setting.key), 'azurewebjobsstorage') || contains(['functions_worker_runtime', 'functions_extension_version', 'applicationinsights_connection_string'], toLower(setting.key)))))
     validActivation: any(!activateFunctionApp || (!empty(models) && (batchEnabled || empty(filter(models, model => contains(model.sku, 'Batch')))) && !empty(cosmosPrivateIps) && inventoryVerified && networkVerified && defenderVerified && siemVerified && applicationVerified && !empty(securityApprovalId) && !empty(allowedPrincipalIds) && !empty(functionPrivateIps) && !empty(apiClientPrefixes) && !empty(monitorPrefixes) && !empty(actionGroupResourceId) && (!processesUntrustedFiles || fileScanningVerified)))
   }
@@ -108,15 +114,12 @@ module network './modules/network.bicep' = {
     vnetAddressPrefixes: vnetAddressPrefixes
     subnetPrefixes: subnetPrefixes
     routeTableResourceId: routeTableResourceId
-    useRemoteGateways: useRemoteGateways
     apiClientPrefixes: apiClientPrefixes
     operatorPrefixes: operatorPrefixes
     monitorPrefixes: monitorPrefixes
     functionPrivateIps: functionPrivateIps
     cosmosPrivateIps: cosmosPrivateIps
     extraEgress: extraEgress
-    dnsServers: dnsServers
-    hubVnetResourceId: hubVnetResourceId
   }
   dependsOn: [contracts]
 }
@@ -147,6 +150,7 @@ module storageEndpoints './modules/private-endpoint.bicep' = [for service in ['b
     subnetResourceId: network.outputs.peSubnetId
     privateLinkServiceId: storage.outputs.resourceId
     groupIds: [service]
+    privateDnsZoneResourceIds: [privateDnsZoneResourceIds[service]]
   }
 }]
 
@@ -164,7 +168,6 @@ module runtime './modules/function-app.bicep' = {
     allowedPrincipalIds: allowedPrincipalIds
     actionGroupResourceId: actionGroupResourceId
     requestsAlertThreshold: requestsAlertThreshold
-    applicationInsightsConnectionString: monitoring.outputs.connectionString
     logAnalyticsWorkspaceResourceId: logAnalyticsWorkspaceResourceId
     siemAuthorizationRuleId: siemAuthorizationRuleId
     siemEventHubName: siemEventHubName
@@ -195,6 +198,7 @@ module functionEndpoint './modules/private-endpoint.bicep' = {
     subnetResourceId: network.outputs.peSubnetId
     privateLinkServiceId: runtime.outputs.resourceId
     groupIds: ['sites']
+    privateDnsZoneResourceIds: [privateDnsZoneResourceIds.sites]
   }
 }
 
@@ -205,15 +209,9 @@ output storageAccountResourceId string = storage.outputs.resourceId
 output vnetResourceId string = network.outputs.vnetId
 
 output securityResourceIds object = { hostStorage: storage.outputs.resourceId, businessStorage: businessStorage.outputs.resourceId, functionApp: runtime.outputs.resourceId, cosmos: services.outputs.cosmosId, openAi: services.outputs.openAiId, documentIntelligence: services.outputs.documentIntelligenceId, vault: services.outputs.vaultId }
-output applicationInsightsResourceId string = monitoring.outputs.resourceId
 output businessStorageResourceId string = businessStorage.outputs.resourceId
 output serviceConnections object = services.outputs.connections
 
-module monitoring './modules/monitoring.bicep' = {
-  name: 'analisisdec-monitoring'
-  params: { location: location, tags: tags, applicationInsightsName: applicationInsightsName, logAnalyticsWorkspaceResourceId: logAnalyticsWorkspaceResourceId }
-  dependsOn: [contracts]
-}
 module businessStorage './modules/storage.bicep' = {
   name: 'analisisdec-datos'
   params: {
@@ -244,15 +242,15 @@ module services './modules/services.bicep' = {
   dependsOn: [contracts]
 }
 var targets = [
-  { name: businessStorageAccountName, id: businessStorage.outputs.resourceId, group: 'blob' }
-  { name: cosmosAccountName, id: services.outputs.cosmosId, group: 'Sql' }
-  { name: openAiAccountName, id: services.outputs.openAiId, group: 'account' }
-  { name: documentIntelligenceAccountName, id: services.outputs.documentIntelligenceId, group: 'account' }
-  { name: keyVaultName, id: services.outputs.vaultId, group: 'vault' }
+  { name: businessStorageAccountName, id: businessStorage.outputs.resourceId, group: 'blob', zoneId: privateDnsZoneResourceIds.blob }
+  { name: cosmosAccountName, id: services.outputs.cosmosId, group: 'Sql', zoneId: privateDnsZoneResourceIds.cosmosSql }
+  { name: openAiAccountName, id: services.outputs.openAiId, group: 'account', zoneId: privateDnsZoneResourceIds.cognitiveServicesAccount }
+  { name: documentIntelligenceAccountName, id: services.outputs.documentIntelligenceId, group: 'account', zoneId: privateDnsZoneResourceIds.cognitiveServicesAccount }
+  { name: keyVaultName, id: services.outputs.vaultId, group: 'vault', zoneId: privateDnsZoneResourceIds.keyVault }
 ]
 module serviceEndpoints './modules/private-endpoint.bicep' = [for i in range(0, 5): {
   name: 'analisisdec-pe-servicio-${i}'
-  params: { name: 'pe-${targets[i].name}', location: location, tags: tags, subnetResourceId: network.outputs.peSubnetId, privateLinkServiceId: targets[i].id, groupIds: [targets[i].group] }
+  params: { name: 'pe-${targets[i].name}', location: location, tags: tags, subnetResourceId: network.outputs.peSubnetId, privateLinkServiceId: targets[i].id, groupIds: [targets[i].group], privateDnsZoneResourceIds: [targets[i].zoneId] }
 }]
 module dataAccess './modules/data-access.bicep' = {
   name: 'analisisdec-permisos'
