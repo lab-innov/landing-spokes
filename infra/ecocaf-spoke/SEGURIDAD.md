@@ -4,12 +4,14 @@
 
 `routeTableResourceId` sustituye `firewallPrivateIp`: se asocia una tabla existente
 sin escribir sus rutas. Confirmar región, suscripción y permisos de asociación.
-`useRemoteGateways` solo se habilita cuando el hub permita tránsito por su gateway.
-No se crean firewall, VPN Gateway, Bastion ni resolvers.
+La VNet usa DNS de Azure; no configura servidores DNS personalizados ni peering.
+Plataforma debe crear manualmente la conexión de Virtual WAN de producción.
+No se crean firewall, VPN Gateway, Bastion, resolvers ni direcciones IP públicas.
 
 | Parámetro | Responsable / contenido |
 | --- | --- |
-| `tags.iniciativa`, `tags.DataClassification` | Identidad de ECOCAF y clasificación validada |
+| `tags.iniciativa`, `tags.DataClassification`, `tags.OpsDept`, `tags.UserDept` | Identidad, clasificación y departamentos; `OpsDept` debe ser `DTI` |
+| `privateDnsZoneResourceIds` | IDs completos de Blob, Queue, Table y Azure Websites en `RG-PRIVATEDNS-PR` |
 | `apiClientPrefixes` | Redes VPN/APIM autorizadas para la API |
 | `operatorPrefixes` | Ejecutores/operadores privados autorizados, no toda la VPN |
 | `monitorPrefixes` | IP/CIDR de endpoints AMPLS corporativos |
@@ -33,7 +35,7 @@ predeterminados de Azure:
   ambos nombres; mantener SCM sin autenticación básica y publicar mediante Entra.
 - Operadores declarados a endpoints por TCP 443; los roles del servicio siguen
   siendo necesarios. Se mantiene TLS mínimo 1.2.
-- Salida de Functions a DNS corporativo y DNS Azure, puerto 53; Entra/Monitor por
+- Salida de Functions a DNS de Azure, puerto 53; Entra/Monitor por
   TCP 443; AMPLS por las IP corporativas declaradas.
 - Excepciones `extraEgress`: `purpose: functionsIntegration`, `destination`,
   `ports`, `justification`. IPv4/CIDR /24 o más específico, puertos TCP individuales,
@@ -46,9 +48,10 @@ pertenecen a la subred de endpoints. Su recreación exige actualizar las reglas.
 No se inventan IP estáticas para el servicio.
 
 La tabla de rutas se asocia a ambas subredes; revisar cómo afectan sus rutas a los
-endpoints y a las respuestas. DINE debe integrar `privatelink.azurewebsites.net`
-(app y SCM), Blob, Queue y Table. Confirmar resolución privada desde Azure/VPN y
-agente de publicación; crear peering no prueba conectividad.
+endpoints y a las respuestas. Cada endpoint queda asociado mediante un grupo DNS
+a la zona central suministrada para `privatelink.azurewebsites.net` (app y SCM),
+Blob, Queue y Table. Confirmar resolución privada desde Azure/VPN y el agente de
+publicación; el enlace DNS no prueba conectividad de Virtual WAN.
 
 Entra exige token de la audiencia de la API y object ID autorizado. Probar 401 sin
 token y 403 para identidad no autorizada. Autorización de negocio por documento,
@@ -107,9 +110,9 @@ acceso de servicios de confianza del namespace.
 SOC administra conector hacia Taegis, retención y exportación separada de Activity
 Logs y alertas Defender. `siemVerified` requiere evidencia de recepción de eventos
 correlacionables de ECOCAF, no solo que exista un diagnostic setting.
-Application Insights sigue siendo existente: comprobar asociación AMPLS,
-configuración de ingestión/consulta privadas y DNS. `networkVerified` incluye esa
-verificación; su connection string no configura AMPLS.
+No se crea ni configura Application Insights. La observabilidad de aplicación debe
+integrarse con Dynatrace según el proceso de plataforma; los diagnósticos de recursos
+se conservan hacia Log Analytics y el destino SIEM acordado.
 
 Alertas al Action Group: más de 5 respuestas HTTP 5xx y más de
 `requestsAlertThreshold` solicitudes (10.000 inicialmente), en ventanas de cinco

@@ -12,16 +12,19 @@ param subnetPrefixes = {
   functionsIntegration: 'PENDIENTE-IPAM'
 }
 param routeTableResourceId = 'PENDIENTE-ID-TABLA-CAF'
-param dnsServers = ['PENDIENTE-DNS-CAF']
-param hubVnetResourceId = 'PENDIENTE-ID-HUB'
 param logAnalyticsWorkspaceResourceId = 'PENDIENTE-ID-LOG-ANALYTICS'
-param applicationInsightsConnectionString = 'PENDIENTE-APPLICATION-INSIGHTS'
+param privateDnsZoneResourceIds = {
+  blob: 'PENDIENTE-ID-ZONA-PRIVATELINK-BLOB'
+  queue: 'PENDIENTE-ID-ZONA-PRIVATELINK-QUEUE'
+  table: 'PENDIENTE-ID-ZONA-PRIVATELINK-TABLE'
+  sites: 'PENDIENTE-ID-ZONA-PRIVATELINK-AZUREWEBSITES'
+}
 param authenticationClientId = 'PENDIENTE-REGISTRO-ENTRA'
 param applicationSettings = {}
 param allowedOrigins = []
 param activateFunctionApp = false
 
-param tags = { iniciativa: 'ECOCAF', administradoPor: 'Bicep', DataClassification: 'PENDIENTE-CLASIFICACION' }
+param tags = { iniciativa: 'ECOCAF', administradoPor: 'Bicep', DataClassification: 'PENDIENTE-CLASIFICACION', OpsDept: 'DTI', UserDept: 'PENDIENTE-AREA-FUNCIONAL' }
 param apiClientPrefixes = []
 param operatorPrefixes = []
 param monitorPrefixes = []

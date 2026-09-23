@@ -11,7 +11,7 @@ def load(name):
 checker=load('check_parameters');security=load('check_security')
 SID='11111111-1111-1111-1111-111111111111'
 def rid(kind):return f'/subscriptions/{SID}/resourceGroups/caf/providers/{kind}/central'
-def foundation():return dict(tags={'iniciativa':'ECOCAF','DataClassification':'Interna'},functionAppName='func-ecocaf-new',planName='plan-ecocaf-new',storageAccountName='stecocafnew',vnetAddressPrefixes=['10.181.0.0/24'],subnetPrefixes={'privateEndpoints':'10.181.0.0/27','functionsIntegration':'10.181.0.64/26'},dnsServers=['10.179.0.4'],hubVnetResourceId=rid('Microsoft.Network/virtualNetworks'),routeTableResourceId=rid('Microsoft.Network/routeTables'),logAnalyticsWorkspaceResourceId=rid('Microsoft.OperationalInsights/workspaces'))
+def foundation():return dict(tags={'iniciativa':'ECOCAF','DataClassification':'Interna','OpsDept':'DTI','UserDept':'Área funcional'},functionAppName='func-ecocaf-new',planName='plan-ecocaf-new',storageAccountName='stecocafnew',vnetAddressPrefixes=['10.181.0.0/24'],subnetPrefixes={'privateEndpoints':'10.181.0.0/27','functionsIntegration':'10.181.0.64/26'},routeTableResourceId=rid('Microsoft.Network/routeTables'),logAnalyticsWorkspaceResourceId=rid('Microsoft.OperationalInsights/workspaces'),privateDnsZoneResourceIds={service:f'/subscriptions/{SID}/resourceGroups/RG-PRIVATEDNS-PR/providers/Microsoft.Network/privateDnsZones/privatelink.{service}.example' for service in ('blob','queue','table','sites')})
 def active():return dict(foundation(),activateFunctionApp=True,inventoryVerified=True,networkVerified=True,defenderVerified=True,siemVerified=True,applicationVerified=True,securityApprovalId='CAF-123',allowedPrincipalIds=[SID],functionPrivateIps=['10.181.0.5'],apiClientPrefixes=['10.178.0.0/24'],monitorPrefixes=['10.179.1.4'],actionGroupResourceId=rid('Microsoft.Insights/actionGroups'))
 class Parameters(unittest.TestCase):
     def test_foundation_and_activation(self):
@@ -45,10 +45,13 @@ class Template(unittest.TestCase):
                 else:cls.resources.append(r)
         walk(cls.arm)
     def test_no_public_or_unproven_services(self):
-        forbidden={'Microsoft.Network/routeTables','Microsoft.Network/publicIPAddresses','Microsoft.Network/privateDnsZones','Microsoft.Network/privateEndpoints/privateDnsZoneGroups','Microsoft.Security/pricings','Microsoft.CognitiveServices/accounts','Microsoft.DocumentDB/databaseAccounts','Microsoft.ContainerRegistry/registries','Microsoft.KeyVault/vaults','Microsoft.App/containerApps'}
+        forbidden={'Microsoft.Network/routeTables','Microsoft.Network/publicIPAddresses','Microsoft.Network/privateDnsZones','Microsoft.Network/virtualNetworks/virtualNetworkPeerings','Microsoft.Insights/components','Microsoft.Security/pricings','Microsoft.CognitiveServices/accounts','Microsoft.DocumentDB/databaseAccounts','Microsoft.ContainerRegistry/registries','Microsoft.KeyVault/vaults','Microsoft.App/containerApps'}
         for r in self.resources:
             self.assertNotIn(r['type'],forbidden)
             if 'publicNetworkAccess' in r.get('properties',{}):self.assertEqual(r['properties']['publicNetworkAccess'],'Disabled')
+        endpoints=[r for r in self.resources if r['type']=='Microsoft.Network/privateEndpoints']
+        zone_groups=[r for r in self.resources if r['type']=='Microsoft.Network/privateEndpoints/privateDnsZoneGroups']
+        self.assertEqual(len(zone_groups),len(endpoints))
     def test_secure_settings_and_auth(self):
         self.assertEqual(self.arm['parameters']['applicationSettings']['type'],'secureObject')
         self.assertFalse(self.arm['parameters']['activateFunctionApp']['defaultValue'])
@@ -71,7 +74,7 @@ class Template(unittest.TestCase):
 
 class Network(unittest.TestCase):
     profiles=json.loads((ROOT/'network-rules.json').read_text())
-    addresses={'functionsIntegration':['10.181.0.64/26'],'privateEndpoints':['10.181.0.0/27'],'function':['10.181.0.5'],'clients':['10.178.0.0/24'],'operators':['10.177.0.4'],'dns':['10.179.0.4'],'monitor':['10.179.1.4']}
+    addresses={'functionsIntegration':['10.181.0.64/26'],'privateEndpoints':['10.181.0.0/27'],'function':['10.181.0.5'],'clients':['10.178.0.0/24'],'operators':['10.177.0.4'],'monitor':['10.179.1.4']}
     def access(self,purpose,direction,source,destination,port):
         def match(token,address):
             if token=='*' or token==address:return True
@@ -86,6 +89,7 @@ class Network(unittest.TestCase):
         self.assertEqual(self.access('privateEndpoints','Inbound','10.178.0.5','10.181.0.6',443),'Deny')
         self.assertEqual(self.access('functionsIntegration','Outbound','10.181.0.70','10.181.0.6',443),'Allow')
         self.assertEqual(self.access('functionsIntegration','Outbound','10.181.0.70','8.8.8.8',443),'Deny')
-        self.assertEqual(self.access('functionsIntegration','Outbound','10.181.0.70','10.179.0.4',53),'Allow')
+        dns=next(r for r in self.profiles['functionsIntegration'] if r['name']=='dns-plataforma')
+        self.assertEqual(dns['properties']['destinationAddressPrefix'],'AzurePlatformDNS')
 
 if __name__=='__main__':unittest.main()

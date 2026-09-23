@@ -15,12 +15,14 @@ no acreditan el estado actual de CAF ni autorizan cambios corporativos.
 | Topología | Plan propone VNet compartida, admite VNet por iniciativa; esta variante ya tiene VNet propia | Se conserva la migración paralela con dos subredes. Confirmar destino/IPAM con CAF; no se impone /24 |
 | Rutas | Bicep creaba tabla local a partir de IP del firewall | Se sustituye `firewallPrivateIp` por `routeTableResourceId` existente. CAF conserva control de rutas |
 | NSG | Reglas predeterminadas permitían más tráfico que la regla HTTPS visible | Se permite solo tráfico definido para integración y endpoints, con denegación final |
-| VPN/DNS | Hub y DNS existentes | Se mantiene DINE sin zonas/grupos nuevos y se permite configurar tránsito remoto cuando plataforma habilite el lado hub |
+| Conectividad/DNS | Producción no admite peering y cada endpoint requiere DNS central | Se retira el peering y el DNS personalizado; plataforma crea la conexión Virtual WAN y el Bicep enlaza cada endpoint a IDs de zonas existentes |
 | Entra | Autenticación obligatoria sin lista de identidades autorizadas | Se añade allowlist por object ID y se bloquea activación incompleta |
 | Roles | Table Data Contributor se asignaba siempre al host | Se exige necesidad explícita de tablas/bindings; Blob Data Owner se conserva para AzureWebJobsStorage |
 | Defender | Sin configuración ni comprobación | Se habilita configuración del Storage de host heredada de CAF; script revisa AppServices/CloudPosture y host Storage |
 | Auditoría | Blob y cuenta con diagnóstico; Queue/Table sin diagnóstico propio | Se añaden logs de datos y opción de envío al Event Hub existente |
 | Alertas | No había alertas propias | Errores HTTP y volumen de solicitudes al Action Group corporativo |
+| Application Insights | No permitido por CAF para esta carga | Se retira la connection string; Dynatrace se coordina fuera de esta plantilla |
+| Etiquetas | Faltaban departamentos obligatorios | Se exige `OpsDept=DTI` y un `UserDept` no vacío |
 | Recuperación | LRS, una instancia, retención 7 días | Se conserva capacidad; recuperación de blobs/contenedores a 14 días y versiones cuando no es HNS. No se declara HA ni DR |
 | Configuración | Ajustes de host podían introducir variantes de conexión | Contratos rechazan redefinir AzureWebJobsStorage y ajustes básicos del runtime; se conserva carácter secure |
 

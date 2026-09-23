@@ -5,6 +5,7 @@ param location string = resourceGroup().location
 param tags object = {
   iniciativa: 'ECOCAF'
   administradoPor: 'Bicep'
+  OpsDept: 'DTI'
 }
 @minLength(2)
 @maxLength(60)
@@ -24,12 +25,14 @@ param subnetPrefixes {
 @description('ID de tabla de rutas corporativa existente; no se modifica su contenido.')
 @minLength(1)
 param routeTableResourceId string
-@minLength(1)
-param dnsServers array
-param hubVnetResourceId string
 param logAnalyticsWorkspaceResourceId string
-@secure()
-param applicationInsightsConnectionString string
+@description('IDs completos de zonas DNS privadas centralizadas, suministrados por CAF. No se crean zonas locales.')
+param privateDnsZoneResourceIds {
+  blob: string
+  queue: string
+  table: string
+  sites: string
+}
 @description('Registro Entra ID existente para la nueva API; validar los consumidores antes del corte.')
 param authenticationClientId string
 param tenantId string = subscription().tenantId
@@ -46,7 +49,6 @@ param operatorPrefixes string[] = []
 param monitorPrefixes string[] = []
 @description('IP reales del endpoint sites, obtenidas después de la fundación.')
 param functionPrivateIps string[] = []
-param useRemoteGateways bool = false
 @description('Excepciones de salida TCP: purpose=functionsIntegration, destination, ports, justification.')
 param extraEgress array = []
 @description('Object IDs de usuarios o identidades autorizadas; no son client IDs ni grupos.')
@@ -74,7 +76,7 @@ param requestsAlertThreshold int = 10000
 module contracts './modules/contracts.bicep' = {
   name: 'ecocaf-contratos'
   params: {
-    validSecurity: any(!empty(tags.?iniciativa ?? '') && !empty(tags.?DataClassification ?? '') && empty(filter(allowedOrigins, origin => contains(origin, '*'))) && (empty(siemAuthorizationRuleId) == empty(siemEventHubName)))
+    validSecurity: any(!empty(tags.?iniciativa ?? '') && !empty(tags.?DataClassification ?? '') && !empty(tags.?OpsDept ?? '') && !empty(tags.?UserDept ?? '') && empty(filter(allowedOrigins, origin => contains(origin, '*'))) && (empty(siemAuthorizationRuleId) == empty(siemEventHubName)))
     validSettings: any(empty(filter(items(applicationSettings), setting => startsWith(toLower(setting.key), 'azurewebjobsstorage') || contains(['functions_worker_runtime', 'functions_extension_version', 'applicationinsights_connection_string'], toLower(setting.key)))))
     validActivation: any(!activateFunctionApp || (inventoryVerified && networkVerified && defenderVerified && siemVerified && applicationVerified && !empty(securityApprovalId) && !empty(allowedPrincipalIds) && !empty(functionPrivateIps) && !empty(apiClientPrefixes) && !empty(monitorPrefixes) && !empty(actionGroupResourceId) && (!processesUntrustedFiles || fileScanningVerified)))
   }
@@ -89,14 +91,11 @@ module network './modules/network.bicep' = {
     vnetAddressPrefixes: vnetAddressPrefixes
     subnetPrefixes: subnetPrefixes
     routeTableResourceId: routeTableResourceId
-    useRemoteGateways: useRemoteGateways
     apiClientPrefixes: apiClientPrefixes
     operatorPrefixes: operatorPrefixes
     monitorPrefixes: monitorPrefixes
     functionPrivateIps: functionPrivateIps
     extraEgress: extraEgress
-    dnsServers: dnsServers
-    hubVnetResourceId: hubVnetResourceId
   }
   dependsOn: [contracts]
 }
@@ -127,6 +126,7 @@ module storageEndpoints './modules/private-endpoint.bicep' = [for service in ['b
     subnetResourceId: network.outputs.peSubnetId
     privateLinkServiceId: storage.outputs.resourceId
     groupIds: [service]
+    privateDnsZoneResourceIds: [privateDnsZoneResourceIds[service]]
   }
 }]
 
@@ -144,7 +144,6 @@ module runtime './modules/function-app.bicep' = {
     allowedPrincipalIds: allowedPrincipalIds
     actionGroupResourceId: actionGroupResourceId
     requestsAlertThreshold: requestsAlertThreshold
-    applicationInsightsConnectionString: applicationInsightsConnectionString
     logAnalyticsWorkspaceResourceId: logAnalyticsWorkspaceResourceId
     siemAuthorizationRuleId: siemAuthorizationRuleId
     siemEventHubName: siemEventHubName
@@ -175,6 +174,7 @@ module functionEndpoint './modules/private-endpoint.bicep' = {
     subnetResourceId: network.outputs.peSubnetId
     privateLinkServiceId: runtime.outputs.resourceId
     groupIds: ['sites']
+    privateDnsZoneResourceIds: [privateDnsZoneResourceIds.sites]
   }
 }
 
