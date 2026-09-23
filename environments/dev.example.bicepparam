@@ -20,6 +20,7 @@ param privateDnsZoneResourceIds = {
   sites: 'PENDIENTE-ID-ZONA-AZUREWEBSITES'
   cosmosSql: 'PENDIENTE-ID-ZONA-COSMOS-SQL'
   cognitiveServicesAccount: 'PENDIENTE-ID-ZONA-COGNITIVE-SERVICES'
+  openAi: 'PENDIENTE-ID-ZONA-OPENAI'
 }
 param businessStorageAccountName = 'PENDIENTE'
 param cosmosAccountName = 'PENDIENTE'

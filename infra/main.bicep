@@ -36,6 +36,7 @@ param privateDnsZoneResourceIds {
   sites: string
   cosmosSql: string
   cognitiveServicesAccount: string
+  openAi: string
 }
 param businessStorageAccountName string
 param cosmosAccountName string
@@ -242,7 +243,7 @@ module services './modules/services.bicep' = {
 var targets = [
   { name: businessStorageAccountName, id: businessStorage.outputs.resourceId, group: 'blob', zoneId: privateDnsZoneResourceIds.blob }
   { name: cosmosAccountName, id: services.outputs.cosmosId, group: 'Sql', zoneId: privateDnsZoneResourceIds.cosmosSql }
-  { name: openAiAccountName, id: services.outputs.openAiId, group: 'account', zoneId: privateDnsZoneResourceIds.cognitiveServicesAccount }
+  { name: openAiAccountName, id: services.outputs.openAiId, group: 'account', zoneId: privateDnsZoneResourceIds.openAi }
   { name: documentIntelligenceAccountName, id: services.outputs.documentIntelligenceId, group: 'account', zoneId: privateDnsZoneResourceIds.cognitiveServicesAccount }
 ]
 module serviceEndpoints './modules/private-endpoint.bicep' = [for i in range(0, 4): {

@@ -40,6 +40,8 @@ Comprobar autenticación y rechazo a usuarios no autorizados, rechazo público, 
 
 B2 de una instancia no proporciona redundancia zonal. RA-GRS replica de forma asíncrona y conserva lectura secundaria, pero esta plantilla no implementa el acceso privado al secundario o failover de toda la aplicación. Cosmos de una región y el host LRS requieren su estrategia propia. Mantener los recursos originales hasta aceptar recuperación y corte.
 
+El endpoint de Azure OpenAI se registra en `privatelink.openai.azure.com`; Document Intelligence utiliza `privatelink.cognitiveservices.azure.com`. Ambos IDs se reciben desde las zonas centrales y no se crean zonas locales.
+
 No se han realizado estas pruebas ni `validate`/`what-if` del nuevo destino. Las lecturas Azure realizadas solo corroboran parte del inventario de origen.
 
 ## Referencias
