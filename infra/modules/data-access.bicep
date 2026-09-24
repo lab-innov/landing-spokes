@@ -6,19 +6,21 @@ param documentName string
 param vaultName string
 param secretNames array
 param batchEnabled bool
+param containerNames string[]
+param cosmosDatabaseName string
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = { name: storageName }
 resource blobs 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = { name: 'default', parent: storage }
-resource containers 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' existing = [for name in ['basedocuments', 'base-templates', 'dec-generated']: { name: name, parent: blobs }]
-resource blobRoles 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (name, i) in ['basedocuments', 'base-templates', 'dec-generated']: {
+resource containers 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' existing = [for name in containerNames: { name: name, parent: blobs }]
+resource blobRoles 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (name, i) in containerNames: {
   name: guid(storage.id, name, principalId, 'datos')
   scope: containers[i]
   properties: { principalId: principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') }
 }]
 resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' existing = { name: cosmosName }
 resource cosmosRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
-  name: guid(cosmos.id, principalId, 'analysis-dec-db')
+  name: guid(cosmos.id, principalId, cosmosDatabaseName)
   parent: cosmos
-  properties: { principalId: principalId, roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', scope: '${cosmos.id}/dbs/analysis-dec-db' }
+  properties: { principalId: principalId, roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', scope: '${cosmos.id}/dbs/${cosmosDatabaseName}' }
 }
 resource openAi 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = { name: openAiName }
 resource document 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = { name: documentName }
@@ -33,10 +35,10 @@ resource documentRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   properties: { principalId: principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908') }
 }
 resource batchRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = if (batchEnabled) {
-  name: guid(resourceGroup().id, 'analisisdec-batch')
+  name: guid(resourceGroup().id, 'smartreview-batch')
   properties: {
-    roleName: 'ANALISISDEC Batch ${uniqueString(resourceGroup().id)}'
-    description: 'Crear y consultar lotes y archivos de la cuenta OpenAI de ANALISISDEC.'
+    roleName: 'SmartReview Batch ${uniqueString(resourceGroup().id)}'
+    description: 'Crear y consultar lotes y archivos de la cuenta OpenAI de Smart Review.'
     type: 'CustomRole'
     assignableScopes: [resourceGroup().id]
     permissions: [{

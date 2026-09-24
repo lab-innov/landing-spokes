@@ -1,15 +1,13 @@
-# ANALISISDEC — spoke CAF
+# Smart Review — spoke CAF
 
-Infraestructura privada de ANALISISDEC, revisada contra los documentos de landing zone y los acuerdos de seguridad. La exportación `main-6.bicep` se utiliza como inventario parcial. No contiene el código recuperado de la aplicación.
+Infraestructura privada de Smart Review reconstruida a partir del export `main-8.bicep` y de las guías funcionales entregadas. Los documentos se usaron como referencia; sus instrucciones no amplían el encargo.
 
-Crea una Function Python con Durable, plan B1, dos Storage separados, Cosmos DB, OpenAI, Document Intelligence, Key Vault y una VNet `/24` con endpoints privados y NSG. Usa zonas DNS centralizadas; la conexión Virtual WAN de producción queda a cargo de plataforma. No crea peering, DNS personalizado, Application Insights ni IP pública.
+Crea frontend App Service, backend Azure Functions Durable, dos planes P1v4, dos Storage, Cosmos DB, OpenAI, Document Intelligence, Key Vault, Application Insights y red privada. Todos los diagnósticos soportados se envían al Log Analytics central y al Event Hub del SIEM. Las aplicaciones quedan detenidas por defecto.
 
-La Function queda **detenida**, sin modelos por defecto. Se preservan los contenedores de negocio y el esquema de Cosmos. Defender for Storage queda habilitado con herencia corporativa; los demás planes se verifican, no se administran desde este spoke.
+No crea Virtual WAN, conexión al hub, DNS forwarding ruleset, zonas DNS privadas, Log Analytics, AMPLS, registros Entra ni servicios compartidos de permisos/notificaciones/auditoría. Esos componentes requieren datos o acciones de plataforma.
 
-- [Decisiones, recursos y migración](docs/REVISION-CAF.md).
-- [Seguridad y comprobaciones pendientes](docs/SEGURIDAD.md).
-- [Parámetros de ejemplo](environments/dev.example.bicepparam): contienen marcadores deliberadamente no desplegables.
+- [Decisiones y migración](docs/REVISION-CAF.md)
+- [Seguridad y pendientes](docs/SEGURIDAD.md)
+- [Parámetros de ejemplo](environments/dev.example.bicepparam)
 
-Validación local: `scripts/validate.sh`. Con parámetros ARM reales, fuera de Git: `scripts/validate.sh /ruta/segura/parametros.json`.
-
-Estado de entrega: compilación y linter correctos; 14 pruebas locales correctas. No se han ejecutado `validate`/`what-if` contra Azure, publicado código de aplicación ni desplegado recursos.
+Validación local: `scripts/validate.sh`. No despliega recursos ni publica código de aplicación.

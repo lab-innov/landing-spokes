@@ -4,6 +4,7 @@ param location string
 param tags object = {}
 param accountName string
 param databaseName string
+param containerNames string[]
 param logAnalyticsWorkspaceResourceId string
 param siemAuthorizationRuleId string
 param siemEventHubName string
@@ -59,7 +60,7 @@ resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-05-15
   }
 }
 
-resource containers 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-05-15' = [for name in ['projects', 'settings']: {
+resource containers 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-05-15' = [for name in containerNames: {
   name: name
   parent: database
   properties: {

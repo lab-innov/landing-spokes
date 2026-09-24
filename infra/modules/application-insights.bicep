@@ -1,0 +1,23 @@
+targetScope = 'resourceGroup'
+
+param name string
+param location string
+param tags object = {}
+param workspaceResourceId string
+
+resource insights 'Microsoft.Insights/components@2020-02-02' = {
+  name: name
+  location: location
+  tags: tags
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: workspaceResourceId
+    RetentionInDays: 90
+    publicNetworkAccessForIngestion: 'Disabled'
+    publicNetworkAccessForQuery: 'Disabled'
+  }
+}
+
+output resourceId string = insights.id
+output connectionString string = insights.properties.ConnectionString

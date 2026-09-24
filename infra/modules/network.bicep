@@ -11,6 +11,7 @@ param operatorPrefixes array
 param monitorPrefixes array
 param cosmosPrivateIps array
 param functionPrivateIps array
+param frontendPrivateIps array
 param extraEgress array
 
 var subnetDefinitions = [
@@ -26,9 +27,15 @@ var subnetDefinitions = [
     delegation: 'Microsoft.Web/serverFarms'
     privateEndpointNetworkPolicies: 'Disabled'
   }
+  {
+    name: 'snet-frontend-integration'
+    prefix: subnetPrefixes.frontendIntegration
+    delegation: 'Microsoft.Web/serverFarms'
+    privateEndpointNetworkPolicies: 'Disabled'
+  }
 ]
 
-module subnetNsgs './nsg.bicep' = [for (purpose, i) in ['privateEndpoints', 'functionsIntegration']: {
+module subnetNsgs './nsg.bicep' = [for (purpose, i) in ['privateEndpoints', 'functionsIntegration', 'frontendIntegration']: {
   name: 'nsg-${purpose}'
   params: {
     name: 'nsg-${subnetDefinitions[i].name}'
@@ -40,6 +47,7 @@ module subnetNsgs './nsg.bicep' = [for (purpose, i) in ['privateEndpoints', 'fun
     operatorPrefixes: operatorPrefixes
     monitorPrefixes: monitorPrefixes
     functionPrivateIps: functionPrivateIps
+    frontendPrivateIps: frontendPrivateIps
     cosmosPrivateIps: cosmosPrivateIps
     extraEgress: extraEgress
   }
@@ -81,3 +89,4 @@ output vnetId string = vnet.id
 output vnetName string = vnet.name
 output peSubnetId string = '${vnet.id}/subnets/snet-private-endpoints'
 output functionsIntegrationSubnetId string = '${vnet.id}/subnets/snet-functions-integration'
+output frontendIntegrationSubnetId string = '${vnet.id}/subnets/snet-frontend-integration'

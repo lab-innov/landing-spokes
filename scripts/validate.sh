@@ -9,7 +9,7 @@ trap 'rm -rf "$validation_dir"' EXIT
 "$BICEP_BIN" build infra/main.bicep --outfile "$validation_dir/main.json"
 "$BICEP_BIN" lint infra/main.bicep
 "$BICEP_BIN" build-params environments/dev.example.bicepparam --outfile "$validation_dir/example.json"
-ANALISISDEC_ARM="$validation_dir/main.json" python3 -m unittest discover -s tests -v
+SMARTREVIEW_ARM="$validation_dir/main.json" python3 -m unittest discover -s tests -v
 if python3 scripts/check_parameters.py "$validation_dir/example.json" > "$validation_dir/expected-errors.txt"; then
   echo 'ERROR: se aceptaron marcadores del ejemplo.'; exit 1
 fi

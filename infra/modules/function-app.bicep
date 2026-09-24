@@ -18,6 +18,7 @@ param requestsAlertThreshold int
 param logAnalyticsWorkspaceResourceId string
 param siemAuthorizationRuleId string
 param siemEventHubName string
+param applicationInsightsConnectionString string
 
 resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: planName
@@ -25,8 +26,8 @@ resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
   tags: tags
   kind: 'linux'
   sku: {
-    name: 'B1'
-    tier: 'Basic'
+    name: 'P1v4'
+    tier: 'PremiumV4'
     capacity: 1
   }
   properties: {
@@ -65,6 +66,7 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
       appSettings: [for setting in items(union(applicationSettings, {
         AzureWebJobsStorage__accountName: hostStorageAccountName
         AzureWebJobsStorage__credential: 'managedidentity'
+        APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsightsConnectionString
         FUNCTIONS_EXTENSION_VERSION: '~4'
         FUNCTIONS_WORKER_RUNTIME: 'python'
       })): {

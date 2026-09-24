@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-KINDS={'hostStorage':'Microsoft.Storage/storageAccounts','businessStorage':'Microsoft.Storage/storageAccounts','functionApp':'Microsoft.Web/sites','cosmos':'Microsoft.DocumentDB/databaseAccounts','openAi':'Microsoft.CognitiveServices/accounts','documentIntelligence':'Microsoft.CognitiveServices/accounts','vault':'Microsoft.KeyVault/vaults'}
+KINDS={'hostStorage':'Microsoft.Storage/storageAccounts','businessStorage':'Microsoft.Storage/storageAccounts','functionApp':'Microsoft.Web/sites','frontendApp':'Microsoft.Web/sites','cosmos':'Microsoft.DocumentDB/databaseAccounts','openAi':'Microsoft.CognitiveServices/accounts','documentIntelligence':'Microsoft.CognitiveServices/accounts','vault':'Microsoft.KeyVault/vaults','applicationInsights':'Microsoft.Insights/components'}
 
 def get(path):
     r=subprocess.run(['az','rest','--method','get','--url','https://management.azure.com'+path,'--output','json','--only-show-errors'],capture_output=True,text=True)
@@ -38,7 +38,7 @@ def main():
     plans={v['name']:v['properties'] for v in get(f'/subscriptions/{sid}/providers/Microsoft.Security/pricings?api-version=2024-01-01')['value']}
     storages={key:get(ids[key]+'/providers/Microsoft.Security/defenderForStorageSettings/current?api-version=2025-06-01')['properties'] for key in ('hostStorage','businessStorage')}
     errors=assess(plans,storages,not args.no_untrusted_files)
-    ips={'functionApp':[],'cosmos':[]}
+    ips={'functionApp':[],'frontendApp':[],'cosmos':[]}
     for pe in get(rg+'/providers/Microsoft.Network/privateEndpoints?api-version=2024-05-01')['value']:
         props=pe['properties']
         for key in ips:
@@ -49,7 +49,7 @@ def main():
                 ips[key].extend(c['properties']['privateIPAddress'] for c in get(nic['id']+'?api-version=2024-05-01')['properties']['ipConfigurations'])
     for key in ips:
         if not ips[key]:errors.append(f'No se encontraron IP privadas aprobadas: {key}.')
-    print(json.dumps({'functionPrivateIps':sorted(set(ips['functionApp'])),'cosmosPrivateIps':sorted(set(ips['cosmos'])),'storageSettings':storages,'issues':errors,'configurationChecked':not errors,'pending':'Confirmar exclusiones, límites y herencia efectiva con Seguridad; planes activos no prueban cobertura de modelos/Batch o Document Intelligence, recepción SIEM, detección ni bloqueo de documentos.'},indent=2,ensure_ascii=False))
+    print(json.dumps({'functionPrivateIps':sorted(set(ips['functionApp'])),'frontendPrivateIps':sorted(set(ips['frontendApp'])),'cosmosPrivateIps':sorted(set(ips['cosmos'])),'storageSettings':storages,'issues':errors,'configurationChecked':not errors,'pending':'Confirmar exclusiones, límites y herencia efectiva con Seguridad; planes activos no prueban cobertura de modelos/Batch o Document Intelligence, recepción SIEM, detección ni bloqueo de documentos.'},indent=2,ensure_ascii=False))
     return bool(errors)
 
 if __name__=='__main__':

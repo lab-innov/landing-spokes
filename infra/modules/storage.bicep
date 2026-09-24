@@ -3,6 +3,11 @@ targetScope = 'resourceGroup'
 param location string
 param tags object = {}
 param storageAccountName string
+@allowed([
+  'Standard_LRS'
+  'Standard_RAGRS'
+])
+param skuName string = 'Standard_LRS'
 param containerNames array = []
 param isHnsEnabled bool = false
 param logAnalyticsWorkspaceResourceId string
@@ -15,7 +20,7 @@ resource account 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   tags: tags
   kind: 'StorageV2'
   sku: {
-    name: 'Standard_LRS'
+    name: skuName
   }
   properties: {
     accessTier: 'Hot'

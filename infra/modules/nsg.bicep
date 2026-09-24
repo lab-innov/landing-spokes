@@ -8,9 +8,10 @@ param operatorPrefixes array
 param monitorPrefixes array
 param cosmosPrivateIps array
 param functionPrivateIps array
+param frontendPrivateIps array
 param extraEgress array
 var profiles = loadJsonContent('../network-rules.json')
-var lists = { clients: apiClientPrefixes, operators: operatorPrefixes, monitor: monitorPrefixes, cosmos: cosmosPrivateIps, function: functionPrivateIps }
+var lists = { clients: apiClientPrefixes, operators: operatorPrefixes, monitor: monitorPrefixes, cosmos: cosmosPrivateIps, function: functionPrivateIps, frontend: frontendPrivateIps }
 var selected = filter(profiles[purpose], r => (!contains(lists, r.properties.sourceAddressPrefix) || !empty(lists[?r.properties.sourceAddressPrefix] ?? [])) && (!contains(lists, r.properties.destinationAddressPrefix) || !empty(lists[?r.properties.destinationAddressPrefix] ?? [])))
 var rules = [for r in selected: {
   name: r.name
