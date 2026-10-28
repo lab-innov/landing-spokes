@@ -41,7 +41,7 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    enabled: enabled
+    enabled: true
     serverFarmId: plan.id
     httpsOnly: true
     publicNetworkAccess: 'Disabled'
