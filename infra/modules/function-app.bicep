@@ -8,7 +8,6 @@ param hostStorageAccountName string
 @secure()
 param applicationSettings object = {}
 param allowedOrigins array = []
-param enabled bool = false
 param integrationSubnetResourceId string
 param tenantId string
 param authenticationClientId string
